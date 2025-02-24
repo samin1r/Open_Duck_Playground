@@ -101,7 +101,7 @@ class BaseRunner(ABC):
         )
 
         _, params, _ = train_fn(
-            environment=self.env,
+            environment=joystick.Joystick(),
             eval_env=joystick.Joystick(),
             wrap_env_fn=wrapper.wrap_for_brax_training,
         )
