@@ -20,6 +20,7 @@ import jax
 
 from playground.common.export_onnx import export_onnx
 from playground.common import randomize
+from playground.open_duck_mini_v2 import joystick
 
 class BaseRunner(ABC):
     def __init__(self, args: argparse.Namespace) -> None:
@@ -94,15 +95,14 @@ class BaseRunner(ABC):
             ppo.train,
             **self.ppo_training_params,
             network_factory=network_factory,
-            # randomization_fn=self.randomizer,
-            randomization_fn=randomize.domain_randomize,
+            randomization_fn=self.randomizer,
             progress_fn=self.progress_callback,
             policy_params_fn=self.policy_params_fn,
         )
 
         _, params, _ = train_fn(
             environment=self.env,
-            # eval_env=self.eval_env,
+            eval_env=joystick.Joystick(),
             wrap_env_fn=wrapper.wrap_for_brax_training,
         )
 
