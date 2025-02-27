@@ -85,7 +85,10 @@ class BaseRunner(ABC):
         self.ppo_params = locomotion_params.brax_ppo_config(
             "BerkeleyHumanoidJoystickFlatTerrain"
         )  # TODO
+        # print(self.ppo_params)
+        # exit()
         self.ppo_training_params = dict(self.ppo_params)
+        self.ppo_training_params["num_envs"] = 512
 
         if "network_factory" in self.ppo_params:
             network_factory = functools.partial(
