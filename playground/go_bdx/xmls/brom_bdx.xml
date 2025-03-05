@@ -164,19 +164,30 @@
       </body>
     </body>
   </worldbody>
-
-  <actuator>
+  <!-- <actuator>
     <position name="left_hip_yaw" joint="left_hip_yaw" inheritrange="1" kp="10" kv="0.3" forcerange="-23.7 23.7"/>
     <position name="left_hip_roll" joint="left_hip_roll" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="left_hip_pitch" joint="left_hip_pitch" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="left_knee" joint="left_knee" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="left_ankle" joint="left_ankle" inheritrange="1" kp="10" kv="0.3" forcerange="-23.7 23.7"/>
-    <!-- <position name="neck_pitch"      joint="neck_pitch"      inheritrange="1" kp="10" kv="0.3" forcerange="-23.7 23.7"/> -->
     <position name="right_hip_yaw" joint="right_hip_yaw" inheritrange="1" kp="10" kv="0.3" forcerange="-23.7 23.7"/>
     <position name="right_hip_roll" joint="right_hip_roll" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="right_hip_pitch" joint="right_hip_pitch" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="right_knee" joint="right_knee" inheritrange="1" kp="15" kv="0.6" forcerange="-33.5 33.5"/>
     <position name="right_ankle" joint="right_ankle" inheritrange="1" kp="10" kv="0.3" forcerange="-23.7 23.7"/>
+  </actuator> -->
+
+  <actuator>
+    <position name="left_hip_yaw" joint="left_hip_yaw" inheritrange="1" kp="25" kv="0.3" forcerange="-23.7 23.7"/>
+    <position name="left_hip_roll" joint="left_hip_roll" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="left_hip_pitch" joint="left_hip_pitch" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="left_knee" joint="left_knee" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="left_ankle" joint="left_ankle" inheritrange="1" kp="25" kv="0.3" forcerange="-23.7 23.7"/>
+    <position name="right_hip_yaw" joint="right_hip_yaw" inheritrange="1" kp="25" kv="0.3" forcerange="-23.7 23.7"/>
+    <position name="right_hip_roll" joint="right_hip_roll" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="right_hip_pitch" joint="right_hip_pitch" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="right_knee" joint="right_knee" inheritrange="1" kp="25" kv="0.6" forcerange="-33.5 33.5"/>
+    <position name="right_ankle" joint="right_ankle" inheritrange="1" kp="25" kv="0.3" forcerange="-23.7 23.7"/>
   </actuator>
 
   <sensor>

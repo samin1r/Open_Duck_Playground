@@ -15,7 +15,8 @@ class GoBDXRunner(BaseRunner):
         self.env_config = joystick.default_config()
         self.env = joystick.Joystick(task=args.task)
         self.eval_env = joystick.Joystick(task=args.task)
-        self.randomizer = randomize.domain_randomize
+        # self.randomizer = randomize.domain_randomize
+        self.randomizer = None
         self.action_size = self.env.action_size
         self.obs_size = int(
             self.env.observation_size["state"][0]
