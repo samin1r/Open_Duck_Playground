@@ -12,9 +12,9 @@
     <geom condim="4" contype="1" conaffinity="15" friction="0.9 0.2 0.2" solref="0.001 2"/>
     <!-- <motor ctrllimited="true"/> -->
     <equality solref="0.001 2"/>
-    <default class="visualgeom">
+    <!-- <default>
       <geom material="visualgeom" condim="1" contype="0" conaffinity="0"/>
-    </default>
+    </default> -->
     <!-- <position kp="17.8" kv="0.0" forcerange="-20 20"/> -->
   </default>
 
@@ -33,9 +33,9 @@
     <mesh name="neck_extension" file="neck_extension.stl" scale="0.001 0.001 0.001"/>
     <mesh name="left_foot_pad" file="left_foot_pad.stl" scale="0.001 0.001 0.001"/>
     <mesh name="right_hip" file="right_hip.stl" scale="0.001 0.001 0.001"/>
-    <texture name="texplane" type="2d" builtin="checker" rgb1=".0 .0 .0" rgb2=".8 .8 .8" width="100" height="100"/>
-    <material name="matplane" reflectance="0." texture="texplane" texrepeat="1 1" texuniform="true"/>
-    <material name="visualgeom" rgba="0.5 0.9 0.2 1"/>
+    <!-- <texture name="texplane" type="2d" builtin="checker" rgb1=".0 .0 .0" rgb2=".8 .8 .8" width="100" height="100"/> -->
+    <!-- <material name="matplane" reflectance="0." texture="texplane" texrepeat="1 1" texuniform="true"/>
+    <material name="visualgeom" rgba="0.5 0.9 0.2 1"/> -->
   </asset>
 
   <worldbody>
@@ -44,29 +44,28 @@
     <body name="root" pos="0 0 0.38" quat="1 0 0 0">
       <freejoint name="root"/>
       <site name="imu" size="0.01" pos="0 0 0"/>
-      <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="body" contype="1" conaffinity="0" density="0" group="1"
-        class="visualgeom"/>
+      <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="body" contype="1" conaffinity="0" density="0" group="1"/>
       <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="body"/>
       <inertial pos="0.00613 0.00011 -0.01349" quat="0.50583 0.49592 0.49592 0.50583" mass="3.674"
         diaginertia="0.04019 0.03434 0.02103"/>
       <body name="left_hip_rotation" pos="0 0.04661 0.0072">
         <joint name="left_hip_yaw" pos="0 0 0" axis="0 0 -1" range="-0.5 0.29" actuatorfrcrange="-100 100"/>
         <geom name="geom_left_hip_rotation" pos="0 -0.04661 -0.0072" type="mesh" rgba="0.7 0.7 0.7 1"
-          mesh="left_hip_rotation" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+          mesh="left_hip_rotation" contype="1" conaffinity="0" density="0" group="1"/>
         <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_hip_rotation" pos="0 -0.04661 -0.0072"/>
         <inertial pos="0.00350 0.00790 -0.05200" quat="1.00000 0.06700 -0.01800 0.00290" mass="0.689"
           diaginertia="0.00091 0.00063 0.00048"/>
         <body name="left_hip" pos="0.01127 0.004953 -0.059623">
           <joint name="left_hip_roll" pos="0 0 0" axis="1 0 0" range="-0.628319 0.436332" actuatorfrcrange="-100 100"/>
           <geom name="geom_left_hip" pos="-0.01127 -0.051563 0.052423" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-            mesh="left_hip" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+            mesh="left_hip" contype="1" conaffinity="0" density="0" group="1"/>
           <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_hip" pos="-0.01127 -0.051563 0.052423" quat="1 0 0 0"/>
           <inertial pos="0.01900 0.03500 -0.00028" quat="0.71000 0.71000 -0.00560 -0.02400" mass="0.049"
             diaginertia="0.00005 0.00005 0.00002"/>
           <body name="left_upper_leg" pos="0.019409 0.081888 0">
             <joint name="left_hip_pitch" pos="0 0 0" axis="0 1 0" range="-2.05949 2.05949" actuatorfrcrange="-100 100"/>
             <geom pos="-0.030679 -0.133451 0.052423" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-              mesh="left_upper_leg" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+              mesh="left_upper_leg" contype="1" conaffinity="0" density="0" group="1"/>
             <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_upper_leg" pos="-0.030679 -0.133451 0.052423"
               quat="1 0 0 0"/>
             <inertial pos="-0.00410 0.01300 -0.05600" quat="0.71000 0.00940 0.00620 0.71000" mass="2.089"
@@ -74,7 +73,7 @@
             <body name="left_lower_leg" pos="-0.000673 0 -0.118509">
               <joint name="left_knee" pos="0 0 0" axis="0 1 0" range="-2.16 0" actuatorfrcrange="-100 100"/>
               <geom pos="-0.030006 -0.133451 0.170932" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-                mesh="left_lower_leg" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+                mesh="left_lower_leg" contype="1" conaffinity="0" density="0" group="1"/>
               <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_lower_leg" pos="-0.030006 -0.133451 0.170932"
                 quat="1 0 0 0"/>
               <inertial pos="0.00073 -0.02400 -0.09300" quat="0.71000 -0.07600 -0.02600 0.70000" mass="0.62"
@@ -82,14 +81,13 @@
               <body name="left_foot_cuboid" pos="0.010774 -0.009467 -0.136762">
                 <joint name="left_ankle" pos="0 0 0" axis="0 1 0" range="-1.23 1.48" actuatorfrcrange="-100 100"/>
                 <geom pos="-0.04078 -0.123984 0.307694" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_foot"
-                  contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+                  contype="1" conaffinity="0" density="0" group="1"/>
                 <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_foot" pos="-0.04078 -0.123984 0.307694" quat="1 0 0 0"/>
                 <inertial pos="0.04100 -0.00015 -0.03658" quat="0.56198 0.46073 0.56808 0.39100" mass="0.173"
                   diaginertia="0.00012 0.00010 0.00003"/>
                 <body name="left_foot" pos="0 0 0">
                   <geom pos="-0.04078 -0.123984 0.307694" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-                    mesh="left_foot_pad" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"
-                    name="left_foot_pad"/>
+                    mesh="left_foot_pad" contype="1" conaffinity="0" density="0" group="1" name="left_foot_pad"/>
                   <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_foot_pad" pos="-0.04078 -0.123984 0.307694"
                     quat="1 0 0 0"/>
                   <inertial pos="0.02600 -0.01500 -0.07100" quat="0.00000 0.71000 0.00000 0.71000" mass="0.1"
@@ -105,7 +103,7 @@
       <!-- <body name="neck_extension" pos="0.092558 -0.00375 0.053208">
         <joint name="neck_pitch" pos="0 0 0" axis="0 1 0" range="0 1.32645" actuatorfrcrange="-100 100" />
         <geom pos="-0.092558 0.00375 -0.053208" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1" mesh="neck_extension"
-      contype="1" conaffinity="0" density="0" group="1" class="visualgeom" />
+      contype="1" conaffinity="0" density="0" group="1"  />
         <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="neck_extension" pos="-0.092558 0.00375 -0.053208" quat="1 0 0 0" />
         <inertial pos="-0.06672 -0.00518 0.02423" quat="-0.01943 0.78418 -0.03285 0.62225" mass="0.251" diaginertia="0.00057
       0.00051 0.00014"/>
@@ -113,21 +111,21 @@
       <body name="right_hip_rotation" pos="-9e-06 -0.046484 0.0072">
         <joint name="right_hip_yaw" pos="0 0 0" axis="0 0 -1" range="-0.29 0.5" actuatorfrcrange="-100 100"/>
         <geom pos="9e-06 0.046484 -0.0072" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_hip_rotation"
-          contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+          contype="1" conaffinity="0" density="0" group="1"/>
         <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_hip_rotation" pos="9e-06 0.046484 -0.0072" quat="1 0 0 0"/>
         <inertial pos="0.00350 -0.00770 -0.05100" quat="1.00000 -0.06500 -0.01900 -0.00310" mass="0.689"
           diaginertia="0.00091 0.00063 0.00048"/>
         <body name="right_hip" pos="0.01127 -0.004952 -0.059623">
           <joint name="right_hip_roll" pos="0 0 0" axis="1 0 0" range="-0.436332 0.628319" actuatorfrcrange="-100 100"/>
           <geom pos="-0.011261 0.051436 0.052423" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_hip"
-            contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+            contype="1" conaffinity="0" density="0" group="1"/>
           <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_hip" pos="-0.011261 0.051436 0.052423" quat="1 0 0 0"/>
           <inertial pos="0.01900 -0.03500 -0.00029" quat="0.71000 0.71000 0.02300 0.00580" mass="0.049"
             diaginertia="0.00005 0.00005 0.00002"/>
           <body name="right_upper_leg" pos="0.01941 -0.081889 0">
             <joint name="right_hip_pitch" pos="0 0 0" axis="0 -1 0" range="-2.05949 2.05949" actuatorfrcrange="-100 100"/>
             <geom pos="-0.030671 0.133325 0.052423" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-              mesh="right_upper_leg" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+              mesh="right_upper_leg" contype="1" conaffinity="0" density="0" group="1"/>
             <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_upper_leg" pos="-0.030671 0.133325 0.052423"
               quat="1 0 0 0"/>
             <inertial pos="-0.00410 -0.01300 -0.05600" quat="0.71000 0.00620 0.00940 0.71000" mass="2.089"
@@ -135,7 +133,7 @@
             <body name="right_lower_leg" pos="-0.000674 0 -0.11851">
               <joint name="right_knee" pos="0 0 0" axis="0 1 0" range="-2.16 0" actuatorfrcrange="-100 100"/>
               <geom pos="-0.029997 0.133325 0.170933" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-                mesh="right_lower_leg" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+                mesh="right_lower_leg" contype="1" conaffinity="0" density="0" group="1"/>
               <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_lower_leg" pos="-0.029997 0.133325 0.170933"
                 quat="1 0 0 0"/>
               <inertial pos="0.00073 0.02400 -0.09300" quat="0.70000 -0.02600 -0.07600 0.71000" mass="0.62"
@@ -143,15 +141,14 @@
               <body name="right_foot_cuboid" pos="0.010775 0.009467 -0.136761">
                 <joint name="right_ankle" pos="0 0 0" axis="0 -1 0" range="-1.48 1.23" actuatorfrcrange="-100 100"/>
                 <geom pos="-0.040772 0.123858 0.307694" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-                  mesh="right_foot" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"/>
+                  mesh="right_foot" contype="1" conaffinity="0" density="0" group="1"/>
                 <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_foot" pos="-0.040772 0.123858 0.307694"
                   quat="1 0 0 0"/>
                 <inertial pos="0.04100 0.00015 -0.03658" quat="0.39100 0.56808 0.46073 0.56198" mass="0.173"
                   diaginertia="0.00012 0.00010 0.00003"/>
                 <body name="right_foot" pos="0 0 0">
                   <geom pos="-0.040772 0.123858 0.307694" quat="1 0 0 0" type="mesh" rgba="0.7 0.7 0.7 1"
-                    mesh="right_foot_pad" contype="1" conaffinity="0" density="0" group="1" class="visualgeom"
-                    name="right_foot_pad"/>
+                    mesh="right_foot_pad" contype="1" conaffinity="0" density="0" group="1" name="right_foot_pad"/>
                   <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_foot_pad" pos="-0.040772 0.123858 0.307694"
                     quat="1 0 0 0"/>
                   <inertial pos="0.02600 0.01500 -0.07100" quat="0.71000 0.00000 0.71000 0.00000" mass="0.1"
