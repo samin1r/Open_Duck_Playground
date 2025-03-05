@@ -1,0 +1,22 @@
+<?xml version="0.0" ?>
+<robot name="brom_bdx">
+	<link name="root">
+		<inertial>
+			<origin rpy="1.55101 -0.00000 1.57080" xyz="0.00613 0.00011 -0.01349"/>
+			<mass value="3.67400"/>
+			<inertia ixx="61953.12039" ixy="0" ixz="0" iyy="58203.94264" iyz="0" izz="38364.84073"/>
+		</inertial>
+		<collision>
+			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
+			<geometry>
+				<mesh filename="unknown_file" scale="1.00000 1.00000 1.00000"/>
+			</geometry>
+		</collision>
+		<collision>
+			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
+			<geometry>
+				<mesh filename="unknown_file" scale="1.00000 1.00000 1.00000"/>
+			</geometry>
+		</collision>
+	</link>
+</robot>
