@@ -41,7 +41,7 @@ from playground.common.rewards import (
 )
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
-USE_IMITATION_REWARD = True
+USE_IMITATION_REWARD = False
 
 
 def default_config() -> config_dict.ConfigDict:
