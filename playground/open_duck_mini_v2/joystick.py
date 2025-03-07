@@ -39,6 +39,7 @@ from playground.common.rewards import (
     reward_alive,
     reward_imitation,
     # cost_head_pos,
+    cost_trunk_pitch
 )
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
@@ -84,6 +85,7 @@ def default_config() -> config_dict.ConfigDict:
                 alive=20.0,
                 imitation=1.0,
                 # head_pos=-2.0,
+                trunk_pitch=-1.0
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -101,6 +103,8 @@ def default_config() -> config_dict.ConfigDict:
         head_yaw_range=[-2.7, 2.7],
         head_roll_range=[-0.5, 0.5],
         head_range_factor=0.3,  # to make it easier
+
+        target_trunk_pitch=0.2
     )
 
 
@@ -598,6 +602,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 self._config.reward_config.tracking_sigma,
             ),
             # "orientation": cost_orientation(self.get_gravity(data)),
+            "trunk_pitch": cost_trunk_pitch(self.get_gravity(data), self._config.target_trunk_pitch),
             "torques": cost_torques(data.actuator_force),
             "action_rate": cost_action_rate(action, info["last_act"]),
             "alive": reward_alive(),
