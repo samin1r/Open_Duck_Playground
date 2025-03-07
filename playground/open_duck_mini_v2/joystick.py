@@ -104,7 +104,7 @@ def default_config() -> config_dict.ConfigDict:
         head_roll_range=[-0.5, 0.5],
         head_range_factor=0.3,  # to make it easier
 
-        target_trunk_pitch=0.2
+        target_trunk_pitch=-0.1
     )
 
 
