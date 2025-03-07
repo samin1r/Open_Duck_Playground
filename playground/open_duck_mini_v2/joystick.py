@@ -85,7 +85,7 @@ def default_config() -> config_dict.ConfigDict:
                 alive=20.0,
                 imitation=1.0,
                 # head_pos=-2.0,
-                trunk_pitch=-10.0
+                trunk_pitch=-50.0
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
