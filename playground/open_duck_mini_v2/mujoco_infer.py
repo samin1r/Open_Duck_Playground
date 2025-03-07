@@ -150,6 +150,12 @@ class MjInfer:
         self.accelerometer_dimensions = 3
         self.accelerometer_addr = self.model.sensor_adr[self.accelerometer_id]
 
+        self.gravity_sensor_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SENSOR, "upvector"
+        )
+        self.gravity_sensor_dimensions = 3
+        self.gravity_sensor_addr = self.model.sensor_adr[self.gravity_sensor_id]
+
         self.linvel_id = mujoco.mj_name2id(
             self.model, mujoco.mjtObj.mjOBJ_SENSOR, "local_linvel"
         )
@@ -291,6 +297,12 @@ class MjInfer:
     def get_gravity(self, data):
         return data.site_xmat[self.imu_site_id].reshape((3, 3)).T @ np.array([0, 0, -1])
 
+    def get_gravity_sensor(self, data):
+        return data.sensordata[
+            self.gravity_sensor_addr : self.gravity_sensor_addr
+            + self.gravity_sensor_dimensions
+        ]
+
     def check_contact(self, data, body1_name, body2_name):
         body1_id = data.body(body1_name).id
         body2_id = data.body(body2_name).id
@@ -325,6 +337,8 @@ class MjInfer:
     ):
         gyro = self.get_gyro(data)
         accelerometer = self.get_accelerometer(data)
+
+        # print(self.get_gravity_sensor(data))
 
         gravity = self.get_gravity(data)
         joint_angles = self.get_actuator_joints_qpos(data.qpos)
