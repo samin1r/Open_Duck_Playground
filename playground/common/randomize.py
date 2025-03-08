@@ -17,12 +17,23 @@
 
 import jax
 from mujoco import mjx
+import jax.numpy as jp
 
 FLOOR_GEOM_ID = 0
 TORSO_BODY_ID = 1
 
 
 def domain_randomize(model: mjx.Model, rng: jax.Array):
+
+    # _dof_addr=jp.array([6,8,10,12,14,16,18,20,22,24])
+    # _joint_addr=jp.array([7,9,11,13,15,17,19,21,23,25])
+
+    dof_id=jp.array([idx for idx,fr in enumerate(model.dof_hasfrictionloss) if fr==True]) #for backlash joint we disable frictionloss
+    jnt_id=model.dof_jntid[dof_id]
+
+    dof_addr=jp.array([jadd for jadd in model.jnt_dofadr if jadd in dof_id])
+    joint_addr=model.jnt_qposadr[jnt_id]
+
     @jax.vmap
     def rand_dynamics(rng):
         # Floor friction: =U(0.4, 1.0).
@@ -33,17 +44,30 @@ def domain_randomize(model: mjx.Model, rng: jax.Array):
 
         # Scale static friction: *U(0.9, 1.1).
         rng, key = jax.random.split(rng)
-        frictionloss = model.dof_frictionloss[6:] * jax.random.uniform(
-            key, shape=(10,), minval=0.9, maxval=1.2  # was 0.9, 1.1
+        # frictionloss = model.dof_frictionloss[6:] * jax.random.uniform(
+        #     key, shape=(len(model.dof_frictionloss)-6,), minval=0.9, maxval=1.2  # was 0.9, 1.1
+        # )
+        # dof_frictionloss = model.dof_frictionloss.at[6:].set(frictionloss)
+
+        frictionloss = model.dof_frictionloss[dof_addr] * jax.random.uniform(
+            key, shape=(model.nu,), minval=0.9, maxval=1.2  # was 0.9, 1.1
         )
-        dof_frictionloss = model.dof_frictionloss.at[6:].set(frictionloss)
+        dof_frictionloss = model.dof_frictionloss.at[dof_addr].set(frictionloss)
+
+
 
         # Scale armature: *U(1.0, 1.05).
         rng, key = jax.random.split(rng)
-        armature = model.dof_armature[6:] * jax.random.uniform(
-            key, shape=(10,), minval=0.9, maxval=1.1  # was 1.0, 1.05
+        # armature = model.dof_armature[6:] * jax.random.uniform(
+        #     key, shape=(len(model.dof_frictionloss)-6,), minval=0.9, maxval=1.1  # was 1.0, 1.05
+        # )
+        # dof_armature = model.dof_armature.at[6:].set(armature)
+
+        armature = model.dof_armature[dof_addr] * jax.random.uniform(
+            key, shape=(model.nu,), minval=0.9, maxval=1.1  # was 1.0, 1.05
         )
-        dof_armature = model.dof_armature.at[6:].set(armature)
+        dof_armature = model.dof_armature.at[dof_addr].set(armature)
+
 
         # Jitter center of mass positiion: +U(-0.05, 0.05).
         rng, key = jax.random.split(rng)
@@ -65,13 +89,17 @@ def domain_randomize(model: mjx.Model, rng: jax.Array):
         # Jitter qpos0: +U(-0.05, 0.05).
         rng, key = jax.random.split(rng)
         qpos0 = model.qpos0
-        qpos0 = qpos0.at[7:].set(
-            qpos0[7:] + jax.random.uniform(key, shape=(10,), minval=-0.05, maxval=0.05)
+        # qpos0 = qpos0.at[7:].set(
+        #     qpos0[7:] + jax.random.uniform(key, shape=(len(model.qpos0)-7,), minval=-0.05, maxval=0.05)
+        # )
+        qpos0 = qpos0.at[joint_addr].set(
+            qpos0[joint_addr] + jax.random.uniform(key, shape=(model.nu,), minval=-0.05, maxval=0.05)
         )
+
 
         # # Randomize KP
         rng, key = jax.random.split(rng)
-        factor = jax.random.uniform(key, shape=(10,), minval=0.8, maxval=1.2)
+        factor = jax.random.uniform(key, shape=(model.nu,), minval=0.8, maxval=1.2)
         current_kp = model.actuator_gainprm[:, 0]
         actuator_gainprm = model.actuator_gainprm.at[:, 0].set(current_kp * factor)
         actuator_biasprm = model.actuator_biasprm.at[:, 1].set(-current_kp * factor)

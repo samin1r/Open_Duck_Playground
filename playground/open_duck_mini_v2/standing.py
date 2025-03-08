@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Joystick task for Open Duck Mini V2. (based on Berkeley Humanoid)"""
+"""Standing task for Open Duck Mini V2. (based on Berkeley Humanoid)"""
 
 from typing import Any, Dict, Optional, Union
 import jax
@@ -30,19 +30,16 @@ from . import constants
 from . import base as open_duck_mini_v2_base
 from playground.common.poly_reference_motion import PolyReferenceMotion
 from playground.common.rewards import (
-    reward_tracking_lin_vel,
-    reward_tracking_ang_vel,
-    # cost_orientation,
+    cost_orientation,
     cost_torques,
     cost_action_rate,
     cost_stand_still,
     reward_alive,
-    reward_imitation,
-    # cost_head_pos,
+    cost_head_pos,
 )
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
-USE_IMITATION_REWARD = True
+USE_IMITATION_REWARD = False
 
 
 def default_config() -> config_dict.ConfigDict:
@@ -69,22 +66,21 @@ def default_config() -> config_dict.ConfigDict:
                 joint_vel=2.5,  # rad/s # Was 1.5
                 gravity=0.1,
                 linvel=0.1,
-                gyro=0.1,
-                accelerometer=0.01,
+                gyro=0.05,
+                accelerometer=0.005,
             ),
         ),
         reward_config=config_dict.create(
             scales=config_dict.create(
-                tracking_lin_vel=2.5,
-                tracking_ang_vel=4.0,
-                # orientation=-0.5,
+                # tracking_lin_vel=2.5,
+                # tracking_ang_vel=4.0,
+                orientation=-0.5,
                 torques=-1.0e-3,
-                # action_rate=-0.375,  # was -1.5
-                action_rate=-0.5,  # was -1.5
+                action_rate=-0.375,  # was -1.5
                 stand_still=-0.3,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
-                imitation=1.0,
-                # head_pos=-2.0,
+                # imitation=1.0,
+                head_pos=-2.0,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -93,20 +89,19 @@ def default_config() -> config_dict.ConfigDict:
             interval_range=[5.0, 10.0],
             magnitude_range=[0.1, 1.0],
         ),
-        lin_vel_x=[-0.1, 0.15],
-        lin_vel_y=[-0.2, 0.2],
-        ang_vel_yaw=[-1.0, 1.0],  # [-1.0, 1.0]
-
+        # lin_vel_x=[-0.1, 0.15],
+        # lin_vel_y=[-0.2, 0.2],
+        # ang_vel_yaw=[-1.0, 1.0],  # [-1.0, 1.0]
         neck_pitch_range=[-0.34, 1.1],
         head_pitch_range=[-0.78, 0.78],
         head_yaw_range=[-2.7, 2.7],
         head_roll_range=[-0.5, 0.5],
-        head_range_factor=0.3,  # to make it easier
+        head_range_factor=1.0,
     )
 
 
-class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
-    """Track a joystick command."""
+class Standing(open_duck_mini_v2_base.OpenDuckMiniV2Env):
+    """Standing policy"""
 
     def __init__(
         self,
@@ -588,40 +583,23 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         del metrics  # Unused.
 
         ret = {
-            "tracking_lin_vel": reward_tracking_lin_vel(
-                info["command"],
-                self.get_local_linvel(data),
-                self._config.reward_config.tracking_sigma,
-            ),
-            "tracking_ang_vel": reward_tracking_ang_vel(
-                info["command"],
-                self.get_gyro(data),
-                self._config.reward_config.tracking_sigma,
-            ),
-            # "orientation": cost_orientation(self.get_gravity(data)),
+            "orientation": cost_orientation(self.get_gravity(data)),
             "torques": cost_torques(data.actuator_force),
             "action_rate": cost_action_rate(action, info["last_act"]),
             "alive": reward_alive(),
-            "imitation": reward_imitation(  # FIXME, this reward is so adhoc...
-                self.get_floating_base_qpos(data.qpos),  # floating base qpos
-                self.get_floating_base_qvel(data.qvel),  # floating base qvel
-                self.get_actuator_joints_qpos(data.qpos),
-                self.get_actuator_joints_qvel(data.qvel),
-                contact,
-                info["current_reference_motion"],
-                info["command"],
-                USE_IMITATION_REWARD,
-            ),
             "stand_still": cost_stand_still(
                 # info["command"], data.qpos[7:], data.qvel[6:], self._default_pose
                 info["command"],
                 self.get_actuator_joints_qpos(data.qpos),
                 self.get_actuator_joints_qvel(data.qvel),
                 self._default_actuator,
+                True
             ),
-            # "head_pos": cost_head_pos(
-            #     self.get_actual_joints_qpos(data), info["command"]
-            # ),
+            "head_pos": cost_head_pos(
+                self.get_actuator_joints_qpos(data.qpos),
+                self.get_actuator_joints_qvel(data.qvel),
+                info["command"],
+            ),
         }
 
         return ret
@@ -629,17 +607,17 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
     def sample_command(self, rng: jax.Array) -> jax.Array:
         rng1, rng2, rng3, rng4, rng5, rng6, rng7, rng8 = jax.random.split(rng, 8)
 
-        lin_vel_x = jax.random.uniform(
-            rng1, minval=self._config.lin_vel_x[0], maxval=self._config.lin_vel_x[1]
-        )
-        lin_vel_y = jax.random.uniform(
-            rng2, minval=self._config.lin_vel_y[0], maxval=self._config.lin_vel_y[1]
-        )
-        ang_vel_yaw = jax.random.uniform(
-            rng3,
-            minval=self._config.ang_vel_yaw[0],
-            maxval=self._config.ang_vel_yaw[1],
-        )
+        # lin_vel_x = jax.random.uniform(
+        #     rng1, minval=self._config.lin_vel_x[0], maxval=self._config.lin_vel_x[1]
+        # )
+        # lin_vel_y = jax.random.uniform(
+        #     rng2, minval=self._config.lin_vel_y[0], maxval=self._config.lin_vel_y[1]
+        # )
+        # ang_vel_yaw = jax.random.uniform(
+        #     rng3,
+        #     minval=self._config.ang_vel_yaw[0],
+        #     maxval=self._config.ang_vel_yaw[1],
+        # )
 
         neck_pitch = jax.random.uniform(
             rng5,
@@ -671,9 +649,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             jp.zeros(7),
             jp.hstack(
                 [
-                    lin_vel_x,
-                    lin_vel_y,
-                    ang_vel_yaw,
+                    0.0,
+                    0.0,
+                    0.0,
                     neck_pitch,
                     head_pitch,
                     head_yaw,
