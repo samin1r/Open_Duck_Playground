@@ -60,28 +60,78 @@ class GoBDXEnv(mjx_env.MjxEnv):
 
         self._mjx_model = mjx.put_model(self._mj_model)
         self._xml_path = xml_path
+        self.floating_base_name= [self._mj_model.jnt(k).name for k in range(0, self._mj_model.njnt) if self._mj_model.jnt(k).type == 0][0] #assuming only one floating object!
         self.actuator_names = [
             self._mj_model.actuator(k).name for k in range(0, self._mj_model.nu)
         ]  # will be useful to get only the actuators we care about
-        self.joint_names = [
-            self._mj_model.jnt(k).name for k in range(1, self._mj_model.njnt)
+        self.joint_names = [ #njnt = all joints (including floating base, actuators and backlash joints)
+            self._mj_model.jnt(k).name for k in range(0, self._mj_model.njnt)
         ]  # all the joint (including the backlash joints)
         self.backlash_joint_names = [
-            j for j in self.joint_names if j not in self.actuator_names
+            j for j in self.joint_names if j not in self.actuator_names and j not in self.floating_base_name
         ]  # only the dummy backlash joint
         self.all_joint_ids = [self.get_joint_id_from_name(n) for n in self.joint_names]
-        self.actual_joint_ids = [
+        self.all_joint_qpos_addr = [self.get_joint_addr_from_name(n) for n in self.joint_names]
+
+        self.actuator_joint_ids = [
             self.get_joint_id_from_name(n) for n in self.actuator_names
         ]
-        self.actual_joint_dict = {
+        self.actuator_joint_qpos_addr = [
+            self.get_joint_addr_from_name(n) for n in self.actuator_names
+        ]
+
+        self.backlash_joint_ids=[
+            self.get_joint_id_from_name(n) for n in self.backlash_joint_names
+        ]
+
+        self.backlash_joint_qpos_addr=[
+            self.get_joint_addr_from_name(n) for n in self.backlash_joint_names
+        ]
+
+        self.all_qvel_addr=jp.array([self._mj_model.jnt_dofadr[jad] for jad in self.all_joint_ids])
+        self.actuator_qvel_addr=jp.array([self._mj_model.jnt_dofadr[jad] for jad in self.actuator_joint_ids])
+
+        self.actuator_joint_dict = {
             n: self.get_joint_id_from_name(n) for n in self.actuator_names
         }
+
+        self._floating_base_qpos_addr = self._mj_model.jnt_qposadr[
+            jp.where(self._mj_model.jnt_type == 0)
+        ][
+            0
+        ]  # Assuming there is only one floating base! the jnt_type==0 is a floating joint. 3 is a hinge
+
+        self._floating_base_qvel_addr = self._mj_model.jnt_dofadr[
+            jp.where(self._mj_model.jnt_type == 0)
+        ][
+            0
+        ]  # Assuming there is only one floating base! the jnt_type==0 is a floating joint. 3 is a hinge
+
+        self._floating_base_id = self._mj_model.joint(self.floating_base_name).id
+
+        # self.all_joint_no_backlash_ids=jp.zeros(7+self._mj_model.nu)
+        # all_idx=self.actuator_joint_ids+list(range(self._floating_base_qpos_addr,self._floating_base_qpos_addr+7))
+        # all_idx=jp.array(all_idx).sort()
+        all_idx=self.actuator_joint_ids+list([self.get_joint_id_from_name("floating_base")])
+        all_idx=jp.array(all_idx).sort()
+        # self.all_joint_no_backlash_ids=[idx for idx in self.all_joint_ids if idx not in self.backlash_joint_ids]+list(range(self._floating_base_add,self._floating_base_add+7))
+        self.all_joint_no_backlash_ids=[idx for idx in all_idx]
+        # print(f"ALL: {self.all_joint_no_backlash_ids} back_id: {self.backlash_joint_ids} base_id: {list(range(self._floating_base_qpos_addr,self._floating_base_qpos_addr+7))}")
+
+        self.backlash_idx_to_add = []
+
+        for i, actuator_name in enumerate(self.actuator_names):
+            if actuator_name + "_backlash" not in self.backlash_joint_names:
+                self.backlash_idx_to_add.append(i)
 
         print(f"actuators: {self.actuator_names}")
         print(f"joints: {self.joint_names}")
         print(f"backlash joints: {self.backlash_joint_names}")
-        print(f"actual joints ids: {self.actual_joint_ids}")
-        print(f"actual joints dict: {self.actual_joint_dict}")
+        print(f"actuator joints ids: {self.actuator_joint_ids}")
+        print(f"actuator joints dict: {self.actuator_joint_dict}")
+        print(f"floating qpos addr: {self._floating_base_qpos_addr} qvel addr: {self._floating_base_qvel_addr}")
+
+
 
     def get_actuator_id_from_name(self, name: str) -> int:
         """Return the id of a specified actuator"""
@@ -91,42 +141,94 @@ class GoBDXEnv(mjx_env.MjxEnv):
         """Return the id of a specified joint"""
         return mujoco.mj_name2id(self._mj_model, mujoco.mjtObj.mjOBJ_JOINT, name)
 
-    def get_actual_joint_qpos_from_name(self, data: mjx.Data, name: str) -> jax.Array:
-        """Return the qpos of a given actual joint"""
-        addr = self._mj_model.jnt_qposadr[self.actual_joint_dict[name]]
-        return data.qpos[addr]
 
-    def get_actual_joints_idx(self) -> jax.Array:
+    def get_joint_addr_from_name(self, name: str) -> int:
+        """Return the address of a specified joint"""
+        return self._mj_model.joint(name).qposadr
+
+    def get_dof_id_from_name(self, name: str) -> int:
+        """Return the id of a specified dof"""
+        return mujoco.mj_name2id(self._mj_model, mujoco.mjtObj.mjOBJ_DOF, name)
+
+
+    def get_actuator_joint_qpos_from_name(self, data: jax.Array, name: str) -> jax.Array:
+        """Return the qpos of a given actual joint"""
+        addr = self._mj_model.jnt_qposadr[self.actuator_joint_dict[name]]
+        return data[addr]
+
+    def get_actuator_joints_qpos_addr(self) -> jax.Array:
         """Return the all the idx of actual joints"""
         addr = jp.array(
-            [self._mj_model.jnt_qposadr[idx] for idx in self.actual_joint_ids]
+            [self._mj_model.jnt_qposadr[idx] for idx in self.actuator_joint_ids]
         )
         return addr
 
-    def get_all_joints_idx(self) -> jax.Array:
+    def get_floating_base_qpos(self, data:jax.Array) -> jax.Array:
+        return data[self._floating_base_qpos_addr:self._floating_base_qvel_addr+7]
+
+    def get_floating_base_qvel(self, data:jax.Array) -> jax.Array:
+        return data[self._floating_base_qvel_addr:self._floating_base_qvel_addr+6]
+
+
+    def set_floating_base_qpos(self, new_qpos:jax.Array, qpos:jax.Array) -> jax.Array:
+        return qpos.at[self._floating_base_qpos_addr:self._floating_base_qpos_addr+7].set(new_qpos)
+
+    def set_floating_base_qvel(self, new_qvel:jax.Array, qvel:jax.Array) -> jax.Array:
+        return qvel.at[self._floating_base_qvel_addr:self._floating_base_qvel_addr+6].set(new_qvel)
+
+
+    def exclude_backlash_joints_addr(self) -> jax.Array:
+        """Return the all the idx of actual joints and floating base"""
+        addr = jp.array(
+            [self._mj_model.jnt_qposadr[idx] for idx in self.all_joint_no_backlash_ids]
+        )
+        return addr
+
+
+    def get_all_joints_addr(self) -> jax.Array:
         """Return the all the idx of all joints"""
         addr = jp.array([self._mj_model.jnt_qposadr[idx] for idx in self.all_joint_ids])
         return addr
 
-    def get_actual_joints_qpos(self, data: mjx.Data) -> jax.Array:
+    def get_actuator_joints_qpos(self, data: jax.Array) -> jax.Array:
         """Return the all the qpos of actual joints"""
-        return data.qpos[self.get_actual_joints_idx()]
+        return data[self.get_actuator_joints_qpos_addr()]
 
-    def set_actual_joints_qpos(self, qpos: jax.Array, data: mjx.Data) -> jax.Array:
+    def set_actuator_joints_qpos(self, new_qpos: jax.Array, qpos: jax.Array) -> jax.Array:
         """Set the qpos only for the actual joints (omit the backlash joint)"""
-        return data.qpos.at[self.get_actual_joints_idx()].set(qpos)
+        return qpos.at[self.get_actuator_joints_qpos_addr()].set(new_qpos)
 
-    def get_actual_joints_qpvel(self, data: mjx.Data) -> jax.Array:
+    def get_actuator_backlash_qpos(self, data: jax.Array) -> jax.Array:
+        """Return the all the qpos of backlash joints"""
+        if self.backlash_joint_qpos_addr == []:
+            return jp.array([])
+        return data[jp.array(self.backlash_joint_qpos_addr)]
+
+
+    def get_actuator_joints_qvel(self, data: jax.Array) -> jax.Array:
         """Return the all the qvel of actual joints"""
-        return data.qvel[self.get_actual_joints_idx()]
+        return data[self.actuator_qvel_addr]
 
-    def get_all_joints_qpos(self, data: mjx.Data) -> jax.Array:
+    def set_actuator_joints_qvel(self, new_qvel: jax.Array, qvel: jax.Array) -> jax.Array:
+        """Set the qvel only for the actual joints (omit the backlash joint)"""
+        return qvel.at[self.actuator_qvel_addr].set(new_qvel)
+
+    def get_all_joints_qpos(self, data: jax.Array) -> jax.Array:
         """Return the all the qpos of all joints"""
-        return data.qpos[self.get_all_joints_idx()]
+        return data[self.get_all_joints_addr()]
 
-    def get_all_joints_qpvel(self, data: mjx.Data) -> jax.Array:
+    def get_all_joints_qvel(self, data: jax.Array) -> jax.Array:
         """Return the all the qvel of all joints"""
-        return data.qvel[self.get_all_joints_idx()]
+        return data[self.all_qvel_addr]
+
+    def get_joints_nobacklash_qpos(self, data: jax.Array) -> jax.Array:
+        """Return the all the qpos of actual joints with the floating base"""
+        return data[self.exclude_backlash_joints_addr()]
+
+    def set_complete_qpos_from_joints(self, no_backlash_qpos: jax.Array, full_qpos: jax.Array) -> jax.Array:
+        """In the case of backlash joints, we want to ignore them (remove them) but we still need to set the complete state incuding them"""
+        full_qpos.at[self.exclude_backlash_joints_addr()].set(no_backlash_qpos)
+        return jp.array(full_qpos)
 
     # Sensor readings.
     def get_gravity(self, data: mjx.Data) -> jax.Array:
