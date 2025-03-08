@@ -143,7 +143,7 @@ def reward_imitation(
         return jp.nan_to_num(0.0)
 
     # TODO don't reward for moving when the command is zero.
-    cmd_norm = jp.linalg.norm(cmd[:3])
+    move_cmd_norm = jp.linalg.norm(cmd[:3])
 
     w_torso_pos = 1.0
     w_torso_orientation = 1.0
@@ -203,15 +203,28 @@ def reward_imitation(
     ref_base_ang_vel = reference_frame[angular_vel_slice_start:angular_vel_slice_end]
     base_ang_vel = base_qvel[3:6]
 
+    # Joints
     ref_joint_pos = reference_frame[joint_pos_slice_start:joint_pos_slice_end]
-    # remove the antennas
-    ref_joint_pos = jp.concatenate([ref_joint_pos[:9], ref_joint_pos[11:]])
-    joint_pos = joints_qpos
+    ref_joint_pos = jp.concatenate(
+        [ref_joint_pos[:9], ref_joint_pos[11:]]
+    )  # remove the antennas
+    legs_ref_joint_pos = jp.concatenate(
+        [ref_joint_pos[:5], ref_joint_pos[9:]]
+    )  # remove the antennas
+    # joint_pos = joints_qpos
+    head_ref_joint_pos = cmd[3:]  # head joints
+    legs_joint_pos = jp.concatenate([joints_qpos[:5], joints_qpos[9:]])
+    head_joints_pos = joints_qpos[5:9]
 
     ref_joint_vels = reference_frame[joint_vels_slice_start:joint_vels_slice_end]
-    # remove the neck and head
-    ref_joint_vels = jp.concatenate([ref_joint_vels[:9], ref_joint_vels[11:]])
-    joint_vel = joints_qvel
+    ref_joint_vels = jp.concatenate(
+        [ref_joint_vels[:9], ref_joint_vels[11:]]
+    )  # remove the antennas
+    # joint_vel = joints_qvel
+    head_ref_joint_vels = jp.zeros_like(cmd[3:])  # head joints
+    legs_ref_joint_vel = jp.concatenate([ref_joint_vels[:5], ref_joint_vels[9:]])
+    legs_joint_vels = jp.concatenate([joints_qvel[:5], joints_qvel[9:]])
+    head_joints_vels = joints_qvel[5:9]
 
     # ref_left_toe_pos = reference_frame[left_toe_pos_slice_start:left_toe_pos_slice_end]
     # ref_right_toe_pos = reference_frame[right_toe_pos_slice_start:right_toe_pos_slice_end]
@@ -250,8 +263,22 @@ def reward_imitation(
         * w_ang_vel_z
     )
 
-    joint_pos_rew = -jp.sum(jp.square(joint_pos - ref_joint_pos)) * w_joint_pos
-    joint_vel_rew = -jp.sum(jp.square(joint_vel - ref_joint_vels)) * w_joint_vel
+    legs_joint_pos_rew = (
+        -jp.sum(jp.square(legs_joint_pos - legs_ref_joint_pos)) * w_joint_pos
+    )
+    head_joint_pos_rew = (
+        -jp.sum(jp.square(head_joints_pos - head_ref_joint_pos)) * w_joint_pos
+    )
+
+    legs_joint_vel_rew = (
+        -jp.sum(jp.square(legs_joint_vels - legs_ref_joint_vel)) * w_joint_vel
+    )
+    head_joint_vel_rew = (
+        -jp.sum(jp.square(head_joints_vels - head_ref_joint_vels)) * w_joint_vel
+    )
+
+    # joint_pos_rew = -jp.sum(jp.square(joint_pos - ref_joint_pos)) * w_joint_pos
+    # joint_vel_rew = -jp.sum(jp.square(joint_vel - ref_joint_vels)) * w_joint_vel
 
     ref_foot_contacts = jp.where(
         ref_foot_contacts > 0.5,
@@ -265,13 +292,15 @@ def reward_imitation(
         + lin_vel_z_rew
         + ang_vel_xy_rew
         + ang_vel_z_rew
-        + joint_pos_rew
-        + joint_vel_rew
+        + legs_joint_pos_rew
+        + legs_joint_vel_rew
         + contact_rew
         # + torso_orientation_rew
     )
 
-    reward *= cmd_norm > 0.01  # No reward for zero commands.
+    reward *= move_cmd_norm > 0.01  # No reward for zero move commands.
+
+    reward += head_joint_pos_rew + head_joint_vel_rew  # but always reward head joints
     return jp.nan_to_num(reward)
 
 
