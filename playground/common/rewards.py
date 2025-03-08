@@ -151,8 +151,10 @@ def reward_imitation(
     w_lin_vel_z = 1.0
     w_ang_vel_xy = 0.5
     w_ang_vel_z = 0.5
-    w_joint_pos = 15.0
-    w_joint_vel = 1.0e-3
+    w_legs_joint_pos = 15.0
+    w_head_joint_pos = 100.0
+    w_legs_joint_vel = 1.0e-3
+    w_head_joint_vel = 1.0
     w_contact = 1.0
 
     #  TODO : double check if the slices are correct
@@ -264,17 +266,17 @@ def reward_imitation(
     )
 
     legs_joint_pos_rew = (
-        -jp.sum(jp.square(legs_joint_pos - legs_ref_joint_pos)) * w_joint_pos
+        -jp.sum(jp.square(legs_joint_pos - legs_ref_joint_pos)) * w_legs_joint_pos
     )
     head_joint_pos_rew = (
-        -jp.sum(jp.square(head_joints_pos - head_ref_joint_pos)) * w_joint_pos
+        -jp.sum(jp.square(head_joints_pos - head_ref_joint_pos)) * w_head_joint_pos
     )
 
     legs_joint_vel_rew = (
-        -jp.sum(jp.square(legs_joint_vels - legs_ref_joint_vel)) * w_joint_vel
+        -jp.sum(jp.square(legs_joint_vels - legs_ref_joint_vel)) * w_legs_joint_vel
     )
     head_joint_vel_rew = (
-        -jp.sum(jp.square(head_joints_vels - head_ref_joint_vels)) * w_joint_vel
+        -jp.sum(jp.square(head_joints_vels - head_ref_joint_vels)) * w_head_joint_vel
     )
 
     # joint_pos_rew = -jp.sum(jp.square(joint_pos - ref_joint_pos)) * w_joint_pos
