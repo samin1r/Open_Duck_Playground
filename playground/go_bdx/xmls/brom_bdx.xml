@@ -44,7 +44,7 @@
     <camera name="track" mode="trackcom" pos="0 -3.0 0.9640271041417434" xyaxes="1 0 0 0 0 1"/>
     <body name="root" pos="0 0 0.38" quat="1 0 0 0">
       <freejoint name="root"/>
-      <site name="imu" size="0.01" pos="0 0 0"/>
+      <site name="imu" size="0.01" pos="0 0 0.05"/>
       <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="body"  density="0" group="1"/>
       <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="body"/>
       <inertial pos="0.00613 0.00011 -0.01349" quat="0.50583 0.49592 0.49592 0.50583" mass="3.674"
@@ -95,7 +95,7 @@
                     diaginertia="0.00010 0.00010 0.00001"/>
                 </body>
                 <site name="left_foot" size="0.015"
-                  pos="0.00049999999999996574962 -0.036224999999999729638 0.01955000000000034488"/>
+                  pos="0 -0.015 -0.08"/>
               </body>
             </body>
           </body>
@@ -156,7 +156,7 @@
                     diaginertia="0.00010 0.00010 0.00001"/>
                 </body>
                 <site name="right_foot" size="0.015"
-                  pos="0.0005000000000002155498 -0.036224999999999840661 0.019550000000000664069"/>
+                  pos="0 0.015 -0.08"/>
               </body>
             </body>
           </body>
