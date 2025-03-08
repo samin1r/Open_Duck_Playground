@@ -617,6 +617,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 self.get_actuator_joints_qpos(data.qpos),
                 self.get_actuator_joints_qvel(data.qvel),
                 self._default_actuator,
+                ignore_head=True
             ),
             # "head_pos": cost_head_pos(
             #     self.get_actual_joints_qpos(data), info["command"]
