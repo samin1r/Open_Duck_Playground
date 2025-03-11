@@ -95,10 +95,25 @@ def cost_stand_still(
     qpos: jax.Array,
     qvel: jax.Array,
     default_pose: jax.Array,
+    ignore_head: bool = False,
 ) -> jax.Array:
-    cmd_norm = jp.linalg.norm(commands)
-    pose_cost = jp.sum(jp.abs(qpos - default_pose))
-    vel_cost = jp.sum(jp.abs(qvel))
+    # TODO no hard coded slices
+    cmd_norm = jp.linalg.norm(commands[:3])
+    if not ignore_head:
+        pose_cost = jp.sum(jp.abs(qpos - default_pose))
+        vel_cost = jp.sum(jp.abs(qvel))
+    else:
+        left_leg_pos = qpos[:5]
+        right_leg_pos = qpos[9:]
+        left_leg_vel = qvel[:5]
+        right_leg_vel = qvel[9:]
+        left_leg_default = default_pose[:5]
+        right_leg_default = default_pose[9:]
+        pose_cost = jp.sum(jp.abs(left_leg_pos - left_leg_default)) + jp.sum(
+            jp.abs(right_leg_pos - right_leg_default)
+        )
+        vel_cost = jp.sum(jp.abs(left_leg_vel)) + jp.sum(jp.abs(right_leg_vel))
+
     return jp.nan_to_num(pose_cost + vel_cost) * (cmd_norm < 0.01)
 
 
@@ -115,6 +130,7 @@ def cost_termination(done: jax.Array) -> jax.Array:
 
 
 def reward_imitation(
+    base_qpos: jax.Array,
     base_qvel: jax.Array,
     joints_qpos: jax.Array,
     joints_qvel: jax.Array,
@@ -127,7 +143,7 @@ def reward_imitation(
         return jp.nan_to_num(0.0)
 
     # TODO don't reward for moving when the command is zero.
-    cmd_norm = jp.linalg.norm(cmd)
+    cmd_norm = jp.linalg.norm(cmd[:3])
 
     w_torso_pos = 1.0
     w_torso_orientation = 1.0
@@ -155,8 +171,8 @@ def reward_imitation(
     # root_pos_slice_start = 0
     # root_pos_slice_end = 3
 
-    # root_quat_slice_start = 3
-    # root_quat_slice_end = 7
+    root_quat_slice_start = 3
+    root_quat_slice_end = 7
 
     # left_toe_pos_slice_start = 23
     # left_toe_pos_slice_end = 26
@@ -170,10 +186,16 @@ def reward_imitation(
     # ref_base_pos = reference_frame[root_pos_slice_start:root_pos_slice_end]
     # base_pos = qpos[:3]
 
-    # ref_base_orientation_quat = reference_frame[root_quat_slice_start:root_quat_slice_end]
-    # ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(ref_base_orientation_quat)  # normalize the quat
-    # base_orientation = qpos[3:7]
-    # base_orientation = base_orientation / jp.linalg.norm(base_orientation)  # normalize the quat
+    ref_base_orientation_quat = reference_frame[
+        root_quat_slice_start:root_quat_slice_end
+    ]
+    ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
+        ref_base_orientation_quat
+    )  # normalize the quat
+    base_orientation = base_qpos[3:7]
+    base_orientation = base_orientation / jp.linalg.norm(
+        base_orientation
+    )  # normalize the quat
 
     ref_base_lin_vel = reference_frame[linear_vel_slice_start:linear_vel_slice_end]
     base_lin_vel = base_qvel[:3]
@@ -182,13 +204,13 @@ def reward_imitation(
     base_ang_vel = base_qvel[3:6]
 
     ref_joint_pos = reference_frame[joint_pos_slice_start:joint_pos_slice_end]
-    # remove the neck and head
-    ref_joint_pos = jp.concatenate([ref_joint_pos[:5], ref_joint_pos[11:]])
+    # remove the antennas
+    ref_joint_pos = jp.concatenate([ref_joint_pos[:9], ref_joint_pos[11:]])
     joint_pos = joints_qpos
 
     ref_joint_vels = reference_frame[joint_vels_slice_start:joint_vels_slice_end]
     # remove the neck and head
-    ref_joint_vels = jp.concatenate([ref_joint_vels[:5], ref_joint_vels[11:]])
+    ref_joint_vels = jp.concatenate([ref_joint_vels[:9], ref_joint_vels[11:]])
     joint_vel = joints_qvel
 
     # ref_left_toe_pos = reference_frame[left_toe_pos_slice_start:left_toe_pos_slice_end]
@@ -203,7 +225,12 @@ def reward_imitation(
 
     # real quaternion angle doesn't have the expected  effect, switching back for now
     # torso_orientation_rew = jp.exp(-20 * self.quaternion_angle(base_orientation, ref_base_orientation_quat)) * w_torso_orientation
-    # torso_orientation_rew = jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat))) * w_torso_orientation
+
+    # TODO ignore yaw here, we just want xy orientation
+    torso_orientation_rew = (
+        jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
+        * w_torso_orientation
+    )
 
     lin_vel_xy_rew = (
         jp.exp(-8.0 * jp.sum(jp.square(base_lin_vel[:2] - ref_base_lin_vel[:2])))
@@ -233,7 +260,6 @@ def reward_imitation(
     )
     contact_rew = jp.sum(contacts == ref_foot_contacts) * w_contact
 
-    # reward = torso_pos_rew + torso_orientation_rew +  lin_vel_xy_rew + lin_vel_z_rew + ang_vel_xy_rew + ang_vel_z_rew + joint_pos_rew + joint_vel_rew + contact_rew
     reward = (
         lin_vel_xy_rew
         + lin_vel_z_rew
@@ -242,8 +268,9 @@ def reward_imitation(
         + joint_pos_rew
         + joint_vel_rew
         + contact_rew
+        # + torso_orientation_rew
     )
-    # reward = joint_pos_rew + joint_vel_rew + contact_rew # trying without the lin and ang vel because they can compete with the tracking rewards
+
     reward *= cmd_norm > 0.01  # No reward for zero commands.
     return jp.nan_to_num(reward)
 
@@ -253,6 +280,26 @@ def reward_alive() -> jax.Array:
 
 
 # Pose-related rewards.
+
+
+def cost_head_pos(
+    joints_qpos: jax.Array,
+    joints_qvel: jax.Array,
+    cmd: jax.Array,
+) -> jax.Array:
+    move_cmd_norm = jp.linalg.norm(cmd[:3])
+    head_cmd = cmd[3:]
+    head_pos = joints_qpos[5:9]
+    # head_vel = joints_qvel[5:9]
+
+    # target_head_qvel = jp.zeros_like(head_cmd)
+
+    head_pos_error = jp.sum(jp.square(head_pos - head_cmd))
+
+    # head_vel_error = jp.sum(jp.square(head_vel - target_head_qvel))
+
+    return jp.nan_to_num(head_pos_error) * (move_cmd_norm > 0.01)
+    # return jp.nan_to_num(head_pos_error + head_vel_error)
 
 
 # FIXME
@@ -323,7 +370,7 @@ def reward_feet_air_time(
     threshold_min: float = 0.1,  # 0.2
     threshold_max: float = 0.5,
 ) -> jax.Array:
-    cmd_norm = jp.linalg.norm(commands)
+    cmd_norm = jp.linalg.norm(commands[:3])
     air_time = (air_time - threshold_min) * first_contact
     air_time = jp.clip(air_time, max=threshold_max - threshold_min)
     reward = jp.sum(air_time)
