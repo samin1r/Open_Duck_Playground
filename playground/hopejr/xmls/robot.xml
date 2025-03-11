@@ -8,12 +8,13 @@
         <default class="hopejr">
             <joint frictionloss="0.1" armature="0.005"/>
             <position kp="50"/>
-            <default class="visual">
+            <geom contype="0" conaffinity="0"/>
+            <!-- <default class="visual">
                 <geom type="mesh" contype="0" conaffinity="0" group="2"/>
-            </default>
-            <default class="collision">
+            </default> -->
+            <!-- <default class="collision">
                 <geom group="3"/>
-            </default>
+            </default> -->
         </default>
     </default>
     <worldbody>
@@ -25,10 +26,10 @@
                 fullinertia="0.00220527 0.000260248 0.0019751 5.24043e-21 2.60518e-20 -7.22333e-20"/>
             <!-- Part part_1 -->
             <!-- Mesh part_1 -->
-            <geom type="mesh" class="visual" pos="0.155033 -0.204503 0.0575783"
+            <geom type="mesh" pos="0.155033 -0.204503 0.0575783"
                 quat="0.707107 -1.24826e-16 1.11022e-16 0.707107" mesh="part_1" material="part_1_material"/>
             <!-- Mesh part_1 -->
-            <geom type="mesh" class="collision" pos="0.155033 -0.204503 0.0575783"
+            <geom type="mesh" pos="0.155033 -0.204503 0.0575783"
                 quat="0.707107 -1.24826e-16 1.11022e-16 0.707107" mesh="part_1" material="part_1_material"/>
             <!-- Frame trunk (dummy link + fixed joint) -->
             <site name="trunk" pos="0.177533 -0.204503 0.0575783" quat="1 -5.55112e-17 2.22045e-16 1.34714e-18"/>
@@ -40,10 +41,10 @@
                     fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 1.27448e-37 -1.46767e-06 -3.09513e-38"/>
                 <!-- Part part_2 -->
                 <!-- Mesh part_2 -->
-                <geom type="mesh" class="visual" pos="-0.0875 -1.38778e-17 0.02"
+                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02"
                     quat="0.707107 0.707107 -0 -2.79664e-35" mesh="part_2" material="part_2_material"/>
                 <!-- Mesh part_2 -->
-                <geom type="mesh" class="collision" pos="-0.0875 -1.38778e-17 0.02"
+                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02"
                     quat="0.707107 0.707107 -0 -2.79664e-35" mesh="part_2" material="part_2_material"/>
                 <!-- Link part_3 -->
                 <body name="part_3" pos="-0.015 -1.38778e-17 -0.025" quat="0.707107 -4.15832e-16 -0.707107 -8.88178e-16">
@@ -53,10 +54,10 @@
                         fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
                     <!-- Part part_3 -->
                     <!-- Mesh part_3 -->
-                    <geom type="mesh" class="visual" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
+                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
                         material="part_3_material"/>
                     <!-- Mesh part_3 -->
-                    <geom type="mesh" class="collision" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5"
+                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5"
                         mesh="part_3" material="part_3_material"/>
                     <!-- Link part_4 -->
                     <body name="part_4" pos="0 0.1 -0.015" quat="0.5 0.5 0.5 -0.5">
@@ -66,10 +67,10 @@
                             fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
                         <!-- Part part_4 -->
                         <!-- Mesh part_4 -->
-                        <geom type="mesh" class="visual" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20"
+                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20"
                             mesh="part_4" material="part_4_material"/>
                         <!-- Mesh part_4 -->
-                        <geom type="mesh" class="collision" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20"
+                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20"
                             mesh="part_4" material="part_4_material"/>
                         <!-- Link part_5 -->
                         <body name="part_5" pos="0 0 -0.2" quat="0.5 0.5 0.5 0.5">
@@ -79,10 +80,10 @@
                                 fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
                             <!-- Part part_5 -->
                             <!-- Mesh part_5 -->
-                            <geom type="mesh" class="visual" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
+                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
                                 mesh="part_5" material="part_5_material"/>
                             <!-- Mesh part_5 -->
-                            <geom type="mesh" class="collision" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
+                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
                                 mesh="part_5" material="part_5_material"/>
                             <!-- Link part_6 -->
                             <body name="part_6" pos="4.16334e-16 -0.2 0.01"
@@ -94,10 +95,10 @@
                                     fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
                                 <!-- Part part_6 -->
                                 <!-- Mesh part_6 -->
-                                <geom type="mesh" class="visual" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
+                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
                                     mesh="part_6" material="part_6_material"/>
                                 <!-- Mesh part_6 -->
-                                <geom type="mesh" class="collision" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
+                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
                                     mesh="part_6" material="part_6_material"/>
                                 <!-- Link part_7 -->
                                 <body name="part_7" pos="-0.01 0 -0.01"
@@ -109,10 +110,10 @@
                                         fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
                                     <!-- Part part_7 -->
                                     <!-- Mesh part_7 -->
-                                    <geom type="mesh" class="visual" pos="-0.0875 -0.5 0.055"
+                                    <geom type="mesh" pos="-0.0875 -0.5 0.055"
                                         quat="0.707107 0.707107 -0 1.96673e-33" mesh="part_7" material="part_7_material"/>
                                     <!-- Mesh part_7 -->
-                                    <geom type="mesh" class="collision" pos="-0.0875 -0.5 0.055"
+                                    <geom type="mesh" pos="-0.0875 -0.5 0.055"
                                         quat="0.707107 0.707107 -0 1.96673e-33" mesh="part_7" material="part_7_material"
                                         name="left_foot_bottom" contype="0" conaffinity="1" solimp="0.015 1 0.031"
                                         friction="0.8 0.02 0.01"/>
@@ -132,10 +133,10 @@
                     fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 0 -1.46767e-06 0"/>
                 <!-- Part part_2_2 -->
                 <!-- Mesh part_2_2 -->
-                <geom type="mesh" class="visual" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 0 1.0358e-34"
+                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 0 1.0358e-34"
                     mesh="part_2" material="part_2_material"/>
                 <!-- Mesh part_2_2 -->
-                <geom type="mesh" class="collision" pos="-0.0875 -1.38778e-17 0.02"
+                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02"
                     quat="0.707107 0.707107 0 1.0358e-34" mesh="part_2" material="part_2_material"/>
                 <!-- Link part_3_2 -->
                 <body name="part_3_2" pos="-0.015 4.85723e-17 -0.025" quat="3.23091e-16 -0.707107 4.44089e-16 0.707107">
@@ -145,10 +146,10 @@
                         fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
                     <!-- Part part_3_2 -->
                     <!-- Mesh part_3_2 -->
-                    <geom type="mesh" class="visual" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
+                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
                         material="part_3_material"/>
                     <!-- Mesh part_3_2 -->
-                    <geom type="mesh" class="collision" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5"
+                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5"
                         mesh="part_3" material="part_3_material"/>
                     <!-- Link part_4_2 -->
                     <body name="part_4_2" pos="8.32667e-16 0.1 -0.015" quat="0.5 0.5 -0.5 0.5">
@@ -158,10 +159,10 @@
                             fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
                         <!-- Part part_4_2 -->
                         <!-- Mesh part_4_2 -->
-                        <geom type="mesh" class="visual" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
+                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
                             material="part_4_material"/>
                         <!-- Mesh part_4_2 -->
-                        <geom type="mesh" class="collision" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
+                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
                             material="part_4_material"/>
                         <!-- Link part_5_2 -->
                         <body name="part_5_2" pos="0 5.55112e-17 -0.2" quat="0.5 0.5 0.5 0.5">
@@ -171,10 +172,10 @@
                                 fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
                             <!-- Part part_5_2 -->
                             <!-- Mesh part_5_2 -->
-                            <geom type="mesh" class="visual" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
+                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
                                 mesh="part_5" material="part_5_material"/>
                             <!-- Mesh part_5_2 -->
-                            <geom type="mesh" class="collision" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
+                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5"
                                 mesh="part_5" material="part_5_material"/>
                             <!-- Link part_6_2 -->
                             <body name="part_6_2" pos="1.4988e-15 -0.2 0.01" quat="1.35778e-32 0 -6.71617e-19 -1">
@@ -185,10 +186,10 @@
                                     fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
                                 <!-- Part part_6_2 -->
                                 <!-- Mesh part_6_2 -->
-                                <geom type="mesh" class="visual" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
+                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
                                     mesh="part_6" material="part_6_material"/>
                                 <!-- Mesh part_6_2 -->
-                                <geom type="mesh" class="collision" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
+                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5"
                                     mesh="part_6" material="part_6_material"/>
                                 <!-- Link part_7_2 -->
                                 <body name="part_7_2" pos="-0.01 1.11022e-16 -0.01"
@@ -200,10 +201,10 @@
                                         fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
                                     <!-- Part part_7_2 -->
                                     <!-- Mesh part_7_2 -->
-                                    <geom type="mesh" class="visual" pos="-0.0875 -0.5 0.055"
+                                    <geom type="mesh" pos="-0.0875 -0.5 0.055"
                                         quat="0.707107 0.707107 -0 8.03651e-33" mesh="part_7" material="part_7_material"/>
                                     <!-- Mesh part_7_2 -->
-                                    <geom type="mesh" class="collision" pos="-0.0875 -0.5 0.055"
+                                    <geom type="mesh" pos="-0.0875 -0.5 0.055"
                                         quat="0.707107 0.707107 -0 8.03651e-33" mesh="part_7" material="part_7_material"
                                         name="right_foot_bottom" contype="0" conaffinity="1" solimp="0.015 1 0.031"
                                         friction="0.8 0.02 0.01"/>
