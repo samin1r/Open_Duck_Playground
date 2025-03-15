@@ -127,8 +127,8 @@ def check_contact(data, model, body1_name, body2_name):
 
 
 def get_feet_contacts():
-    left_contact = check_contact(data, model, "part_7", "floor")
-    right_contact = check_contact(data, model, "part_7_2", "floor")
+    left_contact = check_contact(data, model, "foot", "floor")
+    right_contact = check_contact(data, model, "foot_2", "floor")
     return left_contact, right_contact
 
 def get_obs(
@@ -220,7 +220,7 @@ try:
                 last_last_last_action = last_last_action.copy()
                 last_last_action = last_action.copy()
                 last_action = action.copy()
-                action = np.zeros(12)
+                # action = np.zeros(12)
                 action = init_pos + action * action_scale
                 data.ctrl = action.copy()
 

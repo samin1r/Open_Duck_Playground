@@ -2,4 +2,25 @@
     "documentId": "e804ad521de5849fb5d906f3",
     "outputFormat": "mujoco",
     "assemblyName": "test_assembly",
+    "simplify_stls": true,
+    "max_stl_size": 0.005,
+    "ignore": {
+        "part_1": "visual",
+        "part_2": "visual",
+        "part_3": "visual",
+        "part_4": "visual",
+        "part_5": "visual",
+        "part_6": "visual",
+        "*": "collision",
+        "!foot": "collision"
+    },
+    "joint_properties": {
+        "default": {
+            "class": "actuator"
+        }
+    },
+    "additional_xml": [
+        "sensors.xml",
+        "joints_properties.xml"
+    ]
 }

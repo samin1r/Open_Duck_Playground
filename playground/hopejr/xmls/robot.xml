@@ -1,282 +1,193 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!-- Generated using onshape-to-robot -->
-<!-- OnShape document_id: e804ad521de5849fb5d906f3 -->
-<mujoco model="hopejr">
-    <option iterations="1" ls_iterations="5">
-        <flag eulerdamp="disable"/>
-    </option>
-    <compiler angle="radian" meshdir="assets"/>
-    <!-- <compiler angle="radian" meshdir="assets" autolimits="true"/>
-    <option noslip_iterations="1"/> -->
-    <default>
-        <default class="hopejr">
-            <joint damping="0.5" frictionloss="0.1" armature="0.02"/>
-            <position kp="10"/>
-            <geom contype="0" conaffinity="0"/>
-            <!-- <default class="visual">
-                <geom type="mesh" contype="0" conaffinity="0" group="2"/>
-            </default> -->
-            <!-- <default class="collision">
-                <geom group="3"/>
-            </default> -->
-        </default>
+<!-- Onshape document_id: e804ad521de5849fb5d906f3 -->
+<mujoco model="xmls">
+  <compiler angle="radian" meshdir="assets" autolimits="true"/>
+  <option noslip_iterations="1"/>
+  <default>
+    <default class="xmls">
+      <joint frictionloss="0.1" armature="0.005"/>
+      <position kp="50" dampratio="1"/>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom group="3"/>
+      </default>
     </default>
-    <worldbody>
-        <!-- Link part_1 -->
-        <body name="part_1" pos="0 0 0.5" quat="1 0 0 0" childclass="hopejr">
-            <freejoint name="part_1_freejoint"/>
-            <site name="imu" pos="0 0 0"/>
-            <inertial pos="0.165033 -0.204503 0.0575783" mass="0.451164"
-                fullinertia="0.00220527 0.000260248 0.0019751 5.24043e-21 2.60518e-20 -7.22333e-20"/>
-            <!-- Part part_1 -->
-            <!-- Mesh part_1 -->
-            <geom type="mesh" pos="0.155033 -0.204503 0.0575783" quat="0.707107 -1.24826e-16 1.11022e-16 0.707107"
-                mesh="part_1" material="part_1_material"/>
-            <!-- Mesh part_1 -->
-            <geom type="mesh" pos="0.155033 -0.204503 0.0575783" quat="0.707107 -1.24826e-16 1.11022e-16 0.707107"
-                mesh="part_1" material="part_1_material"/>
-            <!-- Frame trunk (dummy link + fixed joint) -->
-            <site name="trunk" pos="0.177533 -0.204503 0.0575783" quat="1 -5.55112e-17 2.22045e-16 1.34714e-18"/>
-            <!-- Link part_2 -->
-            <body name="part_2" pos="0.175033 -0.117003 0.0575783" quat="0.5 -0.5 -0.5 0.5">
-                <!-- Joint from part_1 to part_2 -->
-                <joint name="left_hip_roll" type="hinge" range="-0.7853981633974483 0.7853981633974483"/>
-                <inertial pos="-0.0116006 2.25352e-19 -0.0131167" mass="0.0215278"
-                    fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 1.27448e-37 -1.46767e-06 -3.09513e-38"/>
-                <!-- Part part_2 -->
-                <!-- Mesh part_2 -->
-                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 -0 -2.79664e-35" mesh="part_2"
-                    material="part_2_material"/>
-                <!-- Mesh part_2 -->
-                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 -0 -2.79664e-35" mesh="part_2"
-                    material="part_2_material"/>
-                <!-- Link part_3 -->
-                <body name="part_3" pos="-0.015 -1.38778e-17 -0.025" quat="0.707107 -4.15832e-16 -0.707107 -8.88178e-16">
-                    <!-- Joint from part_2 to part_3 -->
-                    <joint name="left_hip_pitch" type="hinge" range="-0.3490658503988659 1.5707963267948966"/>
-                    <inertial pos="3.40913e-09 0.0448354 -0.0141247" mass="0.0353649"
-                        fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
-                    <!-- Part part_3 -->
-                    <!-- Mesh part_3 -->
-                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
-                        material="part_3_material"/>
-                    <!-- Mesh part_3 -->
-                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
-                        material="part_3_material"/>
-                    <!-- Link part_4 -->
-                    <body name="part_4" pos="0 0.1 -0.015" quat="0.5 0.5 0.5 -0.5">
-                        <!-- Joint from part_3 to part_4 -->
-                        <joint name="left_hip_yaw" type="hinge" range="-2.6179938779914944 2.6179938779914944"/>
-                        <inertial pos="0.000209384 8.57718e-09 -0.103723" mass="0.0521727"
-                            fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
-                        <!-- Part part_4 -->
-                        <!-- Mesh part_4 -->
-                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20" mesh="part_4"
-                            material="part_4_material"/>
-                        <!-- Mesh part_4 -->
-                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20" mesh="part_4"
-                            material="part_4_material"/>
-                        <!-- Link part_5 -->
-                        <body name="part_5" pos="0 0 -0.2" quat="0.5 0.5 0.5 0.5">
-                            <!-- Joint from part_4 to part_5 -->
-                            <joint name="left_knee" type="hinge" range="0.0 1.5707963267948966"/>
-                            <inertial pos="-4.29344e-08 -0.1 1.42274e-08" mass="0.0540806"
-                                fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
-                            <!-- Part part_5 -->
-                            <!-- Mesh part_5 -->
-                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5"
-                                material="part_5_material"/>
-                            <!-- Mesh part_5 -->
-                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5"
-                                material="part_5_material"/>
-                            <!-- Link part_6 -->
-                            <body name="part_6" pos="4.16334e-16 -0.2 0.01"
-                                quat="5.53064e-17 -5.20417e-18 1.10818e-16 1">
-                                <!-- Joint from part_5 to part_6 -->
-                                <joint name="left_ankle_pitch" type="hinge"
-                                    range="-1.5707963267948966 1.5707963267948966"/>
-                                <inertial pos="-0.00222383 0 -0.00777617" mass="0.00465095"
-                                    fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
-                                <!-- Part part_6 -->
-                                <!-- Mesh part_6 -->
-                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6"
-                                    material="part_6_material"/>
-                                <!-- Mesh part_6 -->
-                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6"
-                                    material="part_6_material"/>
-                                <!-- Link part_7 -->
-                                <body name="part_7" pos="-0.01 0 -0.01"
-                                    quat="0.707107 1.03325e-16 0.707107 -2.22045e-16">
-                                    <!-- Joint from part_6 to part_7 -->
-                                    <joint name="left_ankle_roll" type="hinge"
-                                        range="-0.7853981633974483 0.7853981633974483"/>
-                                    <inertial pos="-3.76166e-09 0.0136645 0.0226826" mass="0.0306953"
-                                        fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
-                                    <!-- Part part_7 -->
-                                    <!-- Mesh part_7 -->
-                                    <geom type="mesh" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 1.96673e-33"
-                                        mesh="part_7" material="part_7_material"/>
-                                    <!-- Mesh part_7 -->
-                                    <geom type="mesh" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 1.96673e-33"
-                                        mesh="part_7" material="part_7_material" name="left_foot_bottom" contype="0"
-                                        conaffinity="1" solimp="0.015 1 0.031" friction="0.8 0.02 0.01"/>
-                                    <!-- Frame left_foot (dummy link + fixed joint) -->
-                                    <site name="left_foot" pos="-5.55112e-17 0.0200185 0.028571" quat="0.5 0.5 -0.5 0.5"/>
-                                </body>
-                            </body>
-                        </body>
-                    </body>
+  </default>
+  <!-- Additional sensors.xml -->
+  <sensor>
+    <gyro site="trunk" name="gyro"/>
+    <velocimeter site="trunk" name="local_linvel"/>
+    <accelerometer site="trunk" name="accelerometer"/>
+    <framezaxis objtype="site" objname="trunk" name="upvector"/>
+    <framexaxis objtype="site" objname="trunk" name="forwardvector"/>
+    <framelinvel objtype="site" objname="trunk" name="global_linvel"/>
+    <frameangvel objtype="site" objname="trunk" name="global_angvel"/>
+    <framepos objtype="site" objname="trunk" name="position"/>
+    <framequat objtype="site" objname="trunk" name="orientation"/>
+    <framelinvel objtype="site" objname="right_foot" name="right_foot_global_linvel"/>
+    <framelinvel objtype="site" objname="left_foot" name="left_foot_global_linvel"/>
+    <framexaxis objtype="site" objname="left_foot" name="left_foot_upvector"/>
+    <framexaxis objtype="site" objname="right_foot" name="right_foot_upvector"/>
+    <framepos objtype="site" objname="left_foot" name="left_foot_pos"/>
+    <framepos objtype="site" objname="right_foot" name="right_foot_pos"/>
+  </sensor>
+  <!-- Additional joints_properties.xml -->
+  <default>
+    <default class="actuator">
+      <geom contype="0" conaffinity="0"/>
+      <joint damping="0.60" frictionloss="0.052" armature="0.028"/>
+      <position kp="17.8" kv="0.0" forcerange="-3.35 3.35"/>
+    </default>
+    <default class="backlash">
+      <!-- +/- 0.5° of backlash -->
+      <joint damping="0.01" frictionloss="0" armature="0.01" limited="true" range="-0.008726646259971648 0.008726646259971648"/>
+    </default>
+  </default>
+  <worldbody>
+    <!-- Link part_1 -->
+    <body name="part_1" pos="0 0 0.5" quat="1 0 0 0" childclass="xmls">
+      <freejoint name="part_1_freejoint"/>
+      <inertial pos="0.165033 -0.204503 0.0575783" mass="0.451164" fullinertia="0.00220527 0.000260248 0.0019751 5.24043e-21 2.60518e-20 -7.22333e-20"/>
+      <!-- Part part_1 -->
+      <geom type="mesh" class="visual" pos="0.155033 -0.204503 0.0575783" quat="0.707107 -1.24826e-16 1.11022e-16 0.707107" mesh="part_1" material="part_1_material"/>
+      <!-- Frame trunk -->
+      <site group="0" name="trunk" pos="0.177533 -0.204503 0.0575783" quat="1 -5.55112e-17 2.22045e-16 1.34714e-18"/>
+      <!-- Link part_2 -->
+      <body name="part_2" pos="0.175033 -0.117003 0.0575783" quat="0.5 -0.5 -0.5 0.5">
+        <!-- Joint from part_1 to part_2 -->
+        <joint name="left_hip_roll" type="hinge" range="-0.7853981633974483 0.7853981633974483" class="actuator"/>
+        <inertial pos="-0.0116006 2.25352e-19 -0.0131167" mass="0.0215278" fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 1.27448e-37 -1.46767e-06 -3.09513e-38"/>
+        <!-- Part part_2 -->
+        <geom type="mesh" class="visual" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 -0 -2.79664e-35" mesh="part_2" material="part_2_material"/>
+        <!-- Link part_3 -->
+        <body name="part_3" pos="-0.015 -1.38778e-17 -0.025" quat="0.707107 -4.15832e-16 -0.707107 -8.88178e-16">
+          <!-- Joint from part_2 to part_3 -->
+          <joint name="left_hip_pitch" type="hinge" range="-0.3490658503988659 1.5707963267948966" class="actuator"/>
+          <inertial pos="3.40913e-09 0.0448354 -0.0141247" mass="0.0353649" fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
+          <!-- Part part_3 -->
+          <geom type="mesh" class="visual" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3" material="part_3_material"/>
+          <!-- Link part_4 -->
+          <body name="part_4" pos="0 0.1 -0.015" quat="0.5 0.5 0.5 -0.5">
+            <!-- Joint from part_3 to part_4 -->
+            <joint name="left_hip_yaw" type="hinge" range="-2.6179938779914944 2.6179938779914944" class="actuator"/>
+            <inertial pos="0.000209384 8.57718e-09 -0.103723" mass="0.0521727" fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
+            <!-- Part part_4 -->
+            <geom type="mesh" class="visual" pos="-0.0875 0.045 0.1" quat="1 0 -1.44284e-18 -3.65021e-20" mesh="part_4" material="part_4_material"/>
+            <!-- Link part_5 -->
+            <body name="part_5" pos="0 0 -0.2" quat="0.5 0.5 0.5 0.5">
+              <!-- Joint from part_4 to part_5 -->
+              <joint name="left_knee" type="hinge" range="0.0 1.5707963267948966" class="actuator"/>
+              <inertial pos="-4.29344e-08 -0.1 1.42274e-08" mass="0.0540806" fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
+              <!-- Part part_5 -->
+              <geom type="mesh" class="visual" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5" material="part_5_material"/>
+              <!-- Link part_6 -->
+              <body name="part_6" pos="4.16334e-16 -0.2 0.01" quat="5.53064e-17 -5.20417e-18 1.10818e-16 1">
+                <!-- Joint from part_5 to part_6 -->
+                <joint name="left_ankle_pitch" type="hinge" range="-1.5707963267948966 1.5707963267948966" class="actuator"/>
+                <inertial pos="-0.00222383 0 -0.00777617" mass="0.00465095" fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
+                <!-- Part part_6 -->
+                <geom type="mesh" class="visual" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6" material="part_6_material"/>
+                <!-- Link foot -->
+                <body name="foot" pos="-0.01 0 -0.01" quat="0.707107 1.03325e-16 0.707107 -2.22045e-16">
+                  <!-- Joint from part_6 to foot -->
+                  <joint name="left_ankle_roll" type="hinge" range="-0.7853981633974483 0.7853981633974483" class="actuator"/>
+                  <inertial pos="-3.76166e-09 0.0136645 0.0226826" mass="0.0306953" fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
+                  <!-- Part foot -->
+                  <geom type="mesh" class="visual" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 1.96673e-33" mesh="foot" material="foot_material"/>
+                  <geom type="mesh" class="collision" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 1.96673e-33" mesh="foot" material="foot_material"/>
+                  <!-- Frame left_foot -->
+                  <site group="0" name="left_foot" pos="-5.55112e-17 0.0200185 0.028571" quat="0.5 0.5 -0.5 0.5"/>
                 </body>
+              </body>
             </body>
-            <!-- Link part_2_2 -->
-            <body name="part_2_2" pos="0.175033 -0.292003 0.0575783" quat="0.5 0.5 -0.5 -0.5">
-                <!-- Joint from part_1 to part_2_2 -->
-                <joint name="right_hip_roll" type="hinge" range="-0.7853981633974483 0.7853981633974483"/>
-                <inertial pos="-0.0116006 2.25352e-19 -0.0131167" mass="0.0215278"
-                    fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 0 -1.46767e-06 0"/>
-                <!-- Part part_2_2 -->
-                <!-- Mesh part_2_2 -->
-                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 0 1.0358e-34" mesh="part_2"
-                    material="part_2_material"/>
-                <!-- Mesh part_2_2 -->
-                <geom type="mesh" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 0 1.0358e-34" mesh="part_2"
-                    material="part_2_material"/>
-                <!-- Link part_3_2 -->
-                <body name="part_3_2" pos="-0.015 4.85723e-17 -0.025" quat="3.23091e-16 -0.707107 4.44089e-16 0.707107">
-                    <!-- Joint from part_2_2 to part_3_2 -->
-                    <joint name="right_hip_pitch" type="hinge" range="-1.5707963267948966 0.3490658503988659"/>
-                    <inertial pos="3.40913e-09 0.0448354 -0.0141247" mass="0.0353649"
-                        fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
-                    <!-- Part part_3_2 -->
-                    <!-- Mesh part_3_2 -->
-                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
-                        material="part_3_material"/>
-                    <!-- Mesh part_3_2 -->
-                    <geom type="mesh" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3"
-                        material="part_3_material"/>
-                    <!-- Link part_4_2 -->
-                    <body name="part_4_2" pos="8.32667e-16 0.1 -0.015" quat="0.5 0.5 -0.5 0.5">
-                        <!-- Joint from part_3_2 to part_4_2 -->
-                        <joint name="right_hip_yaw" type="hinge" range="-2.6179938779914935 2.6179938779914953"/>
-                        <inertial pos="0.000209384 8.57718e-09 -0.103723" mass="0.0521727"
-                            fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
-                        <!-- Part part_4_2 -->
-                        <!-- Mesh part_4_2 -->
-                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
-                            material="part_4_material"/>
-                        <!-- Mesh part_4_2 -->
-                        <geom type="mesh" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4"
-                            material="part_4_material"/>
-                        <!-- Link part_5_2 -->
-                        <body name="part_5_2" pos="0 5.55112e-17 -0.2" quat="0.5 0.5 0.5 0.5">
-                            <!-- Joint from part_4_2 to part_5_2 -->
-                            <joint name="right_knee" type="hinge" range="0.0 1.5707963267948966"/>
-                            <inertial pos="-4.29344e-08 -0.1 1.42274e-08" mass="0.0540806"
-                                fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
-                            <!-- Part part_5_2 -->
-                            <!-- Mesh part_5_2 -->
-                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5"
-                                material="part_5_material"/>
-                            <!-- Mesh part_5_2 -->
-                            <geom type="mesh" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5"
-                                material="part_5_material"/>
-                            <!-- Link part_6_2 -->
-                            <body name="part_6_2" pos="1.4988e-15 -0.2 0.01" quat="1.35778e-32 0 -6.71617e-19 -1">
-                                <!-- Joint from part_5_2 to part_6_2 -->
-                                <joint name="right_ankle_pitch" type="hinge"
-                                    range="-1.5707963267948966 1.5707963267948966"/>
-                                <inertial pos="-0.00222383 5.55112e-17 -0.00777617" mass="0.00465095"
-                                    fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
-                                <!-- Part part_6_2 -->
-                                <!-- Mesh part_6_2 -->
-                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6"
-                                    material="part_6_material"/>
-                                <!-- Mesh part_6_2 -->
-                                <geom type="mesh" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6"
-                                    material="part_6_material"/>
-                                <!-- Link part_7_2 -->
-                                <body name="part_7_2" pos="-0.01 1.11022e-16 -0.01"
-                                    quat="0.707107 -1.54701e-17 0.707107 -1.11022e-16">
-                                    <!-- Joint from part_6_2 to part_7_2 -->
-                                    <joint name="right_ankle_roll" type="hinge"
-                                        range="-0.7853981633974474 0.7853981633974492"/>
-                                    <inertial pos="-3.76166e-09 0.0136645 0.0226826" mass="0.0306953"
-                                        fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
-                                    <!-- Part part_7_2 -->
-                                    <!-- Mesh part_7_2 -->
-                                    <geom type="mesh" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 8.03651e-33"
-                                        mesh="part_7" material="part_7_material"/>
-                                    <!-- Mesh part_7_2 -->
-                                    <geom type="mesh" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 8.03651e-33"
-                                        mesh="part_7" material="part_7_material" name="right_foot_bottom" contype="0"
-                                        conaffinity="1" solimp="0.015 1 0.031" friction="0.8 0.02 0.01"/>
-                                    <!-- Frame right_foot (dummy link + fixed joint) -->
-                                    <site name="right_foot" pos="-5.55112e-17 0.0200185 0.028571"
-                                        quat="0.5 0.5 -0.5 0.5"/>
-                                </body>
-                            </body>
-                        </body>
-                    </body>
-                </body>
-            </body>
+          </body>
         </body>
-    </worldbody>
-    <asset>
-        <mesh file="part_5.stl"/>
-        <mesh file="part_3.stl"/>
-        <mesh file="part_2.stl"/>
-        <mesh file="part_4.stl"/>
-        <mesh file="part_1.stl"/>
-        <mesh file="part_6.stl"/>
-        <mesh file="part_7.stl"/>
-        <material name="part_1_material" rgba="0.615686 0.811765 0.929412 1"/>
-        <material name="part_2_material" rgba="0.647059 0.647059 0.647059 1"/>
-        <material name="part_3_material" rgba="0.231373 0.380392 0.705882 1"/>
-        <material name="part_4_material" rgba="0.917647 0.917647 0.917647 1"/>
-        <material name="part_5_material" rgba="0.768627 0.886275 0.952941 1"/>
-        <material name="part_6_material" rgba="0.972549 0.529412 0.00392157 1"/>
-        <material name="part_7_material" rgba="0.498039 0.498039 0.498039 1"/>
-    </asset>
-    <actuator>
-        <position class="hopejr" name="left_hip_roll" joint="left_hip_roll"
-            ctrlrange="-0.7853981633974483 0.7853981633974483"/>
-        <position class="hopejr" name="left_hip_pitch" joint="left_hip_pitch"
-            ctrlrange="-0.3490658503988659 1.5707963267948966"/>
-        <position class="hopejr" name="left_hip_yaw" joint="left_hip_yaw"
-            ctrlrange="-2.6179938779914944 2.6179938779914944"/>
-        <position class="hopejr" name="left_knee" joint="left_knee" ctrlrange="0.0 1.5707963267948966"/>
-        <position class="hopejr" name="left_ankle_pitch" joint="left_ankle_pitch"
-            ctrlrange="-1.5707963267948966 1.5707963267948966"/>
-        <position class="hopejr" name="left_ankle_roll" joint="left_ankle_roll"
-            ctrlrange="-0.7853981633974483 0.7853981633974483"/>
-        <position class="hopejr" name="right_hip_roll" joint="right_hip_roll"
-            ctrlrange="-0.7853981633974483 0.7853981633974483"/>
-        <position class="hopejr" name="right_hip_pitch" joint="right_hip_pitch"
-            ctrlrange="-1.5707963267948966 0.3490658503988659"/>
-        <position class="hopejr" name="right_hip_yaw" joint="right_hip_yaw"
-            ctrlrange="-2.6179938779914935 2.6179938779914953"/>
-        <position class="hopejr" name="right_knee" joint="right_knee" ctrlrange="0.0 1.5707963267948966"/>
-        <position class="hopejr" name="right_ankle_pitch" joint="right_ankle_pitch"
-            ctrlrange="-1.5707963267948966 1.5707963267948966"/>
-        <position class="hopejr" name="right_ankle_roll" joint="right_ankle_roll"
-            ctrlrange="-0.7853981633974474 0.7853981633974492"/>
-    </actuator>
-    <sensor>
-        <gyro site="imu" name="gyro"/>
-        <velocimeter site="imu" name="local_linvel"/>
-        <accelerometer site="imu" name="accelerometer"/>
-        <framezaxis objtype="site" objname="imu" name="upvector"/>
-        <framexaxis objtype="site" objname="imu" name="forwardvector"/>
-        <framelinvel objtype="site" objname="imu" name="global_linvel"/>
-        <frameangvel objtype="site" objname="imu" name="global_angvel"/>
-        <framepos objtype="site" objname="imu" name="position"/>
-        <framequat objtype="site" objname="imu" name="orientation"/>
-        <framelinvel objtype="site" objname="right_foot" name="right_foot_global_linvel"/>
-        <framelinvel objtype="site" objname="left_foot" name="left_foot_global_linvel"/>
-        <framexaxis objtype="site" objname="left_foot" name="left_foot_upvector"/>
-        <framexaxis objtype="site" objname="right_foot" name="right_foot_upvector"/>
-        <framepos objtype="site" objname="left_foot" name="left_foot_pos"/>
-        <framepos objtype="site" objname="right_foot" name="right_foot_pos"/>
-    </sensor>
-    <equality/>
+      </body>
+      <!-- Link part_2_2 -->
+      <body name="part_2_2" pos="0.175033 -0.292003 0.0575783" quat="0.5 0.5 -0.5 -0.5">
+        <!-- Joint from part_1 to part_2_2 -->
+        <joint name="right_hip_roll" type="hinge" range="-0.7853981633974483 0.7853981633974483" class="actuator"/>
+        <inertial pos="-0.0116006 2.25352e-19 -0.0131167" mass="0.0215278" fullinertia="4.88403e-06 6.00093e-06 4.91185e-06 0 -1.46767e-06 0"/>
+        <!-- Part part_2_2 -->
+        <geom type="mesh" class="visual" pos="-0.0875 -1.38778e-17 0.02" quat="0.707107 0.707107 0 1.0358e-34" mesh="part_2" material="part_2_material"/>
+        <!-- Link part_3_2 -->
+        <body name="part_3_2" pos="-0.015 4.85723e-17 -0.025" quat="3.23091e-16 -0.707107 4.44089e-16 0.707107">
+          <!-- Joint from part_2_2 to part_3_2 -->
+          <joint name="right_hip_pitch" type="hinge" range="-1.5707963267948966 0.3490658503988659" class="actuator"/>
+          <inertial pos="3.40913e-09 0.0448354 -0.0141247" mass="0.0353649" fullinertia="3.59567e-05 1.66969e-06 3.57291e-05 1.41653e-11 2.91851e-11 1.40753e-06"/>
+          <!-- Part part_3_2 -->
+          <geom type="mesh" class="visual" pos="0.045 -6.245e-17 0.0725" quat="0.5 0.5 0.5 -0.5" mesh="part_3" material="part_3_material"/>
+          <!-- Link part_4_2 -->
+          <body name="part_4_2" pos="8.32667e-16 0.1 -0.015" quat="0.5 0.5 -0.5 0.5">
+            <!-- Joint from part_3_2 to part_4_2 -->
+            <joint name="right_hip_yaw" type="hinge" range="-2.6179938779914935 2.6179938779914953" class="actuator"/>
+            <inertial pos="0.000209384 8.57718e-09 -0.103723" mass="0.0521727" fullinertia="0.000187482 0.00018752 1.72388e-06 -7.06323e-13 1.06442e-06 3.38151e-11"/>
+            <!-- Part part_4_2 -->
+            <geom type="mesh" class="visual" pos="-0.0875 0.045 0.1" quat="1 0 0 0" mesh="part_4" material="part_4_material"/>
+            <!-- Link part_5_2 -->
+            <body name="part_5_2" pos="0 5.55112e-17 -0.2" quat="0.5 0.5 0.5 0.5">
+              <!-- Joint from part_4_2 to part_5_2 -->
+              <joint name="right_knee" type="hinge" range="0.0 1.5707963267948966" class="actuator"/>
+              <inertial pos="-4.29344e-08 -0.1 1.42274e-08" mass="0.0540806" fullinertia="0.000208137 1.84387e-06 0.000208057 7.1479e-11 9.65571e-12 2.21017e-06"/>
+              <!-- Part part_5_2 -->
+              <geom type="mesh" class="visual" pos="0.045 0.3 -0.0875" quat="0.5 -0.5 -0.5 -0.5" mesh="part_5" material="part_5_material"/>
+              <!-- Link part_6_2 -->
+              <body name="part_6_2" pos="1.4988e-15 -0.2 0.01" quat="1.35778e-32 0 -6.71617e-19 -1">
+                <!-- Joint from part_5_2 to part_6_2 -->
+                <joint name="right_ankle_pitch" type="hinge" range="-1.5707963267948966 1.5707963267948966" class="actuator"/>
+                <inertial pos="-0.00222383 5.55112e-17 -0.00777617" mass="0.00465095" fullinertia="1.90809e-07 2.06197e-07 1.90809e-07 2.10229e-12 -3.77922e-08 2.10229e-12"/>
+                <!-- Part part_6_2 -->
+                <geom type="mesh" class="visual" pos="0.045 -0.5 0.0775" quat="0.5 0.5 0.5 -0.5" mesh="part_6" material="part_6_material"/>
+                <!-- Link foot_2 -->
+                <body name="foot_2" pos="-0.01 1.11022e-16 -0.01" quat="0.707107 -1.54701e-17 0.707107 -1.11022e-16">
+                  <!-- Joint from part_6_2 to foot_2 -->
+                  <joint name="right_ankle_roll" type="hinge" range="-0.7853981633974474 0.7853981633974492" class="actuator"/>
+                  <inertial pos="-3.76166e-09 0.0136645 0.0226826" mass="0.0306953" fullinertia="1.34934e-05 1.34204e-05 3.57951e-06 -3.33658e-12 3.03112e-13 -1.34506e-06"/>
+                  <!-- Part foot_2 -->
+                  <geom type="mesh" class="visual" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 8.03651e-33" mesh="foot" material="foot_material"/>
+                  <geom type="mesh" class="collision" pos="-0.0875 -0.5 0.055" quat="0.707107 0.707107 -0 8.03651e-33" mesh="foot" material="foot_material"/>
+                  <!-- Frame right_foot -->
+                  <site group="0" name="right_foot" pos="-5.55112e-17 0.0200185 0.028571" quat="0.5 0.5 -0.5 0.5"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <asset>
+    <mesh file="foot.stl"/>
+    <mesh file="part_5.stl"/>
+    <mesh file="part_6.stl"/>
+    <mesh file="part_1.stl"/>
+    <mesh file="part_3.stl"/>
+    <mesh file="part_4.stl"/>
+    <mesh file="part_2.stl"/>
+    <material name="part_1_material" rgba="0.615686 0.811765 0.929412 1"/>
+    <material name="part_2_material" rgba="0.647059 0.647059 0.647059 1"/>
+    <material name="part_3_material" rgba="0.231373 0.380392 0.705882 1"/>
+    <material name="part_4_material" rgba="0.917647 0.917647 0.917647 1"/>
+    <material name="part_5_material" rgba="0.768627 0.886275 0.952941 1"/>
+    <material name="part_6_material" rgba="0.972549 0.529412 0.00392157 1"/>
+    <material name="foot_material" rgba="0.498039 0.498039 0.498039 1"/>
+  </asset>
+  <actuator>
+    <position class="actuator" name="left_hip_roll" joint="left_hip_roll" inheritrange="1"/>
+    <position class="actuator" name="left_hip_pitch" joint="left_hip_pitch" inheritrange="1"/>
+    <position class="actuator" name="left_hip_yaw" joint="left_hip_yaw" inheritrange="1"/>
+    <position class="actuator" name="left_knee" joint="left_knee" inheritrange="1"/>
+    <position class="actuator" name="left_ankle_pitch" joint="left_ankle_pitch" inheritrange="1"/>
+    <position class="actuator" name="left_ankle_roll" joint="left_ankle_roll" inheritrange="1"/>
+    <position class="actuator" name="right_hip_roll" joint="right_hip_roll" inheritrange="1"/>
+    <position class="actuator" name="right_hip_pitch" joint="right_hip_pitch" inheritrange="1"/>
+    <position class="actuator" name="right_hip_yaw" joint="right_hip_yaw" inheritrange="1"/>
+    <position class="actuator" name="right_knee" joint="right_knee" inheritrange="1"/>
+    <position class="actuator" name="right_ankle_pitch" joint="right_ankle_pitch" inheritrange="1"/>
+    <position class="actuator" name="right_ankle_roll" joint="right_ankle_roll" inheritrange="1"/>
+  </actuator>
+  <equality/>
 </mujoco>

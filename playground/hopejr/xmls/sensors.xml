@@ -1,0 +1,17 @@
+<sensor>
+    <gyro site="trunk" name="gyro"/>
+    <velocimeter site="trunk" name="local_linvel"/>
+    <accelerometer site="trunk" name="accelerometer"/>
+    <framezaxis objtype="site" objname="trunk" name="upvector"/>
+    <framexaxis objtype="site" objname="trunk" name="forwardvector"/>
+    <framelinvel objtype="site" objname="trunk" name="global_linvel"/>
+    <frameangvel objtype="site" objname="trunk" name="global_angvel"/>
+    <framepos objtype="site" objname="trunk" name="position"/>
+    <framequat objtype="site" objname="trunk" name="orientation"/>
+    <framelinvel objtype="site" objname="right_foot" name="right_foot_global_linvel"/>
+    <framelinvel objtype="site" objname="left_foot" name="left_foot_global_linvel"/>
+    <framexaxis objtype="site" objname="left_foot" name="left_foot_upvector"/>
+    <framexaxis objtype="site" objname="right_foot" name="right_foot_upvector"/>
+    <framepos objtype="site" objname="left_foot" name="left_foot_pos"/>
+    <framepos objtype="site" objname="right_foot" name="right_foot_pos"/>
+</sensor>
