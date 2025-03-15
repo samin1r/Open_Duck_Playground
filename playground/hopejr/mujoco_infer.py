@@ -36,22 +36,19 @@ action_scale = 0.25
 
 init_pos = np.array(
     [
-        0.002,
-        0.053,
-        -0.63,
-        1.368,
-        -0.784,
-        # 0.0,
-        # 0,
-        # 0,
-        # 0,
-        # 0,
-        # 0,
-        -0.003,
-        -0.065,
-        0.635,
-        1.379,
-        -0.796,
+        0, 
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+
     ]
 )
 
@@ -87,7 +84,7 @@ linvel_dimensions = 3
 
 imu_site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "imu")
 
-imitation_i = 0
+# imitation_i = 0
 
 
 def get_sensor(model, data, name, dimensions):
@@ -130,8 +127,8 @@ def check_contact(data, model, body1_name, body2_name):
 
 
 def get_feet_contacts():
-    left_contact = check_contact(data, model, "foot_assembly", "floor")
-    right_contact = check_contact(data, model, "foot_assembly_2", "floor")
+    left_contact = check_contact(data, model, "part_7", "floor")
+    right_contact = check_contact(data, model, "part_7_2", "floor")
     return left_contact, right_contact
 
 def get_obs(
@@ -156,7 +153,7 @@ def get_obs(
             last_last_action,
             last_last_last_action,
             contacts,
-            ref,
+            # ref,
         ]
     )
 
@@ -210,8 +207,8 @@ try:
             counter += 1
 
             if counter % decimation == 0:
-                imitation_i += 1
-                imitation_i = imitation_i % PRM.nb_steps_in_period
+                # imitation_i += 1
+                # imitation_i = imitation_i % PRM.nb_steps_in_period
                 obs = get_obs(
                     data,
                     last_action,
@@ -223,7 +220,7 @@ try:
                 last_last_last_action = last_last_action.copy()
                 last_last_action = last_action.copy()
                 last_action = action.copy()
-                # action = np.zeros(10)
+                action = np.zeros(12)
                 action = init_pos + action * action_scale
                 data.ctrl = action.copy()
 

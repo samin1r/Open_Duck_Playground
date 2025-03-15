@@ -10,8 +10,8 @@
     <option noslip_iterations="1"/> -->
     <default>
         <default class="hopejr">
-            <joint frictionloss="0.1" armature="0.005"/>
-            <position kp="50"/>
+            <joint damping="0.5" frictionloss="0.1" armature="0.02"/>
+            <position kp="10"/>
             <geom contype="0" conaffinity="0"/>
             <!-- <default class="visual">
                 <geom type="mesh" contype="0" conaffinity="0" group="2"/>
