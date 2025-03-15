@@ -8,7 +8,7 @@ import argparse
 from etils import epath
 from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
-
+from playground.common.utils import LowPassActionFilter
 # from playground.open_duck_mini_v2 import constants
 from playground.open_duck_mini_v2 import base
 
@@ -20,6 +20,7 @@ class MjInfer:
         self.model = mujoco.MjModel.from_xml_string(
             epath.Path(model_path).read_text(), assets=base.get_assets()
         )
+        print(model_path)
 
         self.standing = standing
         self.head_control_mode = self.standing
@@ -30,6 +31,10 @@ class MjInfer:
         self.dof_pos_scale = 1.0
         self.dof_vel_scale = 0.05
         self.action_scale = 0.25
+
+        self.action_filter = LowPassActionFilter(
+            50, cutoff_frequency=37.5
+        )
 
         if not self.standing:
             self.PRM = PolyReferenceMotion(reference_data)
@@ -433,6 +438,8 @@ class MjInfer:
                         self.saved_obs.append(obs)
                         action = self.policy.infer(obs)
 
+                        # self.action_filter.push(action)
+                        # action = self.action_filter.get_filtered_action()
                         self.last_last_last_action = self.last_last_action.copy()
                         self.last_last_action = self.last_action.copy()
                         self.last_action = action.copy()
@@ -465,7 +472,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_path",
         type=str,
-        default="playground/open_duck_mini_v2/xmls/scene_mjx_flat_terrain.xml",
+        default="playground/open_duck_mini_v2/xmls/scene_flat_terrain.xml",
     )
     parser.add_argument("--standing", action="store_true", default=False)
 
