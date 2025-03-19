@@ -358,10 +358,11 @@ class MjInfer:
                 # self.last_last_last_action,
                 contacts,
                 ref if not self.standing else np.array([]),
+                self.obs_history,
             ]
         )
 
-        obs_for_history = np.hstack(
+        obs_for_history = np.concatenate(
             [
                 gyro,
                 accelerometer,
