@@ -28,6 +28,7 @@ from mujoco_playground._src.collision import geoms_colliding
 
 from . import constants
 from . import base as open_duck_mini_v2_base
+
 # from playground.common.utils import LowPassActionFilter
 from playground.common.poly_reference_motion import PolyReferenceMotion
 from playground.common.rewards import (
@@ -55,7 +56,7 @@ def default_config() -> config_dict.ConfigDict:
         action_repeat=1,
         action_scale=0.25,
         dof_vel_scale=0.05,
-        history_len=0,
+        history_len=3,
         soft_joint_pos_limit_factor=0.95,
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
@@ -202,6 +203,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         # qpos_noise_scale[faa_ids] = self._config.noise_config.scales.faa_pos
         self._qpos_noise_scale = jp.array(qpos_noise_scale)
 
+        self.obs_size_for_history = 57
+
         # self.action_filter = LowPassActionFilter(
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
@@ -301,6 +304,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             # imitation related
             "imitation_i": 0,
             "current_reference_motion": current_reference_motion,
+            "obs_history": jp.zeros(
+                self._config.history_len * self.obs_size_for_history
+            ),
         }
 
         metrics = {}
@@ -540,23 +546,27 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
 
         state = jp.hstack(
             [
-                # noisy_linvel,  # 3
-                # noisy_gyro,  # 3
-                # noisy_gravity,  # 3
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
-                info["command"],  # 3
-                noisy_joint_angles - self._default_actuator,  # 10
-                noisy_joint_vel * self._config.dof_vel_scale,  # 10
-                info["last_act"],  # 10
-                info["last_last_act"],  # 10
-                info["last_last_last_act"],  # 10
+                info["command"],  # 7
+                noisy_joint_angles - self._default_actuator,  # 14
+                noisy_joint_vel * self._config.dof_vel_scale,  # 14
+                info["last_act"],  # 14
+                # info["last_last_act"],  # 14
+                # info["last_last_last_act"],  # 14
                 contact,  # 2
                 info["current_reference_motion"],
+                info["obs_history"],
             ]
         )
 
-        accelerometer = self.get_accelerometer(data)
+        info["obs_history"] = (
+            jp.roll(info["obs_history"], self.obs_size_for_history)
+            .at[: self.obs_size_for_history]
+            .set(obs_for_history)
+        )
+
+        # accelerometer = self.get_accelerometer(data)
         global_angvel = self.get_global_angvel(data)
         feet_vel = data.sensordata[self._foot_linvel_sensor_adr].ravel()
         root_height = data.qpos[self._floating_base_qpos_addr + 2]
@@ -577,7 +587,24 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 feet_vel,  # 4*3
                 info["feet_air_time"],  # 2
                 info["current_reference_motion"],
+                info["obs_history"],
             ]
+        )
+
+        obs_for_history = jp.hstack(
+            [
+                noisy_gyro,
+                noisy_accelerometer,
+                info["command"],
+                noisy_joint_angles - self._default_actuator,
+                noisy_joint_vel * self._config.dof_vel_scale,
+                info["last_act"],
+                contact,
+            ]
+        )
+
+        info["obs_history"] = (
+            jp.roll(info["obs_history"], 57).at[:57].set(obs_for_history)
         )
 
         return {
