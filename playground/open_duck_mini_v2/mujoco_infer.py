@@ -9,6 +9,7 @@ from etils import epath
 from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
 from playground.common.utils import LowPassActionFilter
+
 # from playground.open_duck_mini_v2 import constants
 from playground.open_duck_mini_v2 import base
 
@@ -32,9 +33,7 @@ class MjInfer:
         self.dof_vel_scale = 0.05
         self.action_scale = 0.25
 
-        self.action_filter = LowPassActionFilter(
-            50, cutoff_frequency=37.5
-        )
+        self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
         if not self.standing:
             self.PRM = PolyReferenceMotion(reference_data)
@@ -172,6 +171,11 @@ class MjInfer:
         print(f"actuator names: {self.actuator_names}")
         print(f"backlash joint names: {self.backlash_joint_names}")
         # print(f"actual joints idx: {self.get_actual_joints_idx()}")
+
+        self.history_len = 3
+        self.obs_size_for_history = 57
+
+        self.obs_history = np.zeros(self.history_len * self.obs_size_for_history)
 
     def get_actuator_id_from_name(self, name: str) -> int:
         """Return the id of a specified actuator"""
@@ -346,17 +350,30 @@ class MjInfer:
             [
                 gyro,
                 accelerometer,
-                # gravity,
                 command,
                 joint_angles - self.default_actuator,
                 joint_vel * self.dof_vel_scale,
                 last_action,
-                self.last_last_action,
-                self.last_last_last_action,
+                # self.last_last_action,
+                # self.last_last_last_action,
                 contacts,
                 ref if not self.standing else np.array([]),
             ]
         )
+
+        obs_for_history = np.hstack(
+            [
+                gyro,
+                accelerometer,
+                command,
+                joint_angles - self.default_actuator,
+                joint_vel * self.dof_vel_scale,
+                self.last_action,
+                contacts,
+            ]
+        )
+        self.obs_history = np.roll(self.obs_history, self.obs_size_for_history)
+        self.obs_history[: self.obs_size_for_history] = obs_for_history
 
         return obs
 

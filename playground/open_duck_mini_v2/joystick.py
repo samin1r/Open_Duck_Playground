@@ -548,7 +548,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             [
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
-                info["command"],  # 7
+                info["command"],  # 3
                 noisy_joint_angles - self._default_actuator,  # 14
                 noisy_joint_vel * self._config.dof_vel_scale,  # 14
                 info["last_act"],  # 14
@@ -556,15 +556,10 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 # info["last_last_last_act"],  # 14
                 contact,  # 2
                 info["current_reference_motion"],
-                info["obs_history"],
+                info["obs_history"]
             ]
         )
 
-        info["obs_history"] = (
-            jp.roll(info["obs_history"], self.obs_size_for_history)
-            .at[: self.obs_size_for_history]
-            .set(obs_for_history)
-        )
 
         # accelerometer = self.get_accelerometer(data)
         global_angvel = self.get_global_angvel(data)
@@ -587,7 +582,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 feet_vel,  # 4*3
                 info["feet_air_time"],  # 2
                 info["current_reference_motion"],
-                info["obs_history"],
+                info["obs_history"]
             ]
         )
 
@@ -604,7 +599,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         )
 
         info["obs_history"] = (
-            jp.roll(info["obs_history"], 57).at[:57].set(obs_for_history)
+            jp.roll(info["obs_history"], self.obs_size_for_history).at[:self.obs_size_for_history].set(obs_for_history)
         )
 
         return {
