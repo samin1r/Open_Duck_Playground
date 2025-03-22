@@ -28,62 +28,61 @@ def reward_imitation(
     w_joint_vel = 1.0e-3
     w_contact = 1.0
 
-# dimensions_names = [
-#     0  "pos head_yaw",
-#     1  "pos head_pitch",
-#     2  "pos left_shoulder_pitch",
-#     3  "pos left_shoulder_roll",
-#     4  "pos left_elbow",
-#     5  "pos right_shoulder_pitch",
-#     6  "pos right_shoulder_roll",
-#     7  "pos right_elbow",
-#     8  "pos left_hip_yaw",
-#     9  "pos left_hip_roll",
-#     10 "pos left_hip_pitch",
-#     11 "pos left_knee",
-#     12 "pos left_ankle_pitch",
-#     13 "pos left_ankle_roll",
-#     14 "pos right_hip_yaw",
-#     15 "pos right_hip_roll",
-#     16 "pos right_hip_pitch",
-#     17 "pos right_knee",
-#     18 "pos right_ankle_pitch",
-#     19 "pos right_ankle_roll",
+    # dimensions_names = [
+    #     0  "pos head_yaw",
+    #     1  "pos head_pitch",
+    #     2  "pos left_shoulder_pitch",
+    #     3  "pos left_shoulder_roll",
+    #     4  "pos left_elbow",
+    #     5  "pos right_shoulder_pitch",
+    #     6  "pos right_shoulder_roll",
+    #     7  "pos right_elbow",
+    #     8  "pos left_hip_yaw",
+    #     9  "pos left_hip_roll",
+    #     10 "pos left_hip_pitch",
+    #     11 "pos left_knee",
+    #     12 "pos left_ankle_pitch",
+    #     13 "pos left_ankle_roll",
+    #     14 "pos right_hip_yaw",
+    #     15 "pos right_hip_roll",
+    #     16 "pos right_hip_pitch",
+    #     17 "pos right_knee",
+    #     18 "pos right_ankle_pitch",
+    #     19 "pos right_ankle_roll",
 
-#     20 "vel head_yaw",
-#     21 "vel head_pitch",
-#     22 "vel left_shoulder_pitch",
-#     23 "vel left_shoulder_roll",
-#     24 "vel left_elbow",
-#     25 "vel right_shoulder_pitch",
-#     26 "vel right_shoulder_roll",
-#     27 "vel right_elbow",
-#     28 "vel left_hip_yaw",
-#     29 "vel left_hip_roll",
-#     30 "vel left_hip_pitch",
-#     31 "vel left_knee",
-#     32 "vel left_ankle_pitch",
-#     33 "vel left_ankle_roll",
-#     34 "vel right_hip_yaw",
-#     35 "vel right_hip_roll",
-#     36 "vel right_hip_pitch",
-#     37 "vel right_knee",
-#     38 "vel right_ankle_pitch",
-#     39 "vel right_ankle_roll",
+    #     20 "vel head_yaw",
+    #     21 "vel head_pitch",
+    #     22 "vel left_shoulder_pitch",
+    #     23 "vel left_shoulder_roll",
+    #     24 "vel left_elbow",
+    #     25 "vel right_shoulder_pitch",
+    #     26 "vel right_shoulder_roll",
+    #     27 "vel right_elbow",
+    #     28 "vel left_hip_yaw",
+    #     29 "vel left_hip_roll",
+    #     30 "vel left_hip_pitch",
+    #     31 "vel left_knee",
+    #     32 "vel left_ankle_pitch",
+    #     33 "vel left_ankle_roll",
+    #     34 "vel right_hip_yaw",
+    #     35 "vel right_hip_roll",
+    #     36 "vel right_hip_pitch",
+    #     37 "vel right_knee",
+    #     38 "vel right_ankle_pitch",
+    #     39 "vel right_ankle_roll",
 
-#     40 "foot_contacts left",
-#     41 "foot_contacts right",
+    #     40 "foot_contacts left",
+    #     41 "foot_contacts right",
 
-#     42 "base_linear_vel x",
-#     43 "base_linear_vel y",
-#     44 "base_linear_vel z",
+    #     42 "base_linear_vel x",
+    #     43 "base_linear_vel y",
+    #     44 "base_linear_vel z",
 
-#     45 "base_angular_vel x",
-#     46 "base_angular_vel y",
-#     47 "base_angular_vel z",
-# ]
-    
-    
+    #     45 "base_angular_vel x",
+    #     46 "base_angular_vel y",
+    #     47 "base_angular_vel z",
+    # ]
+
     #  TODO : double check if the slices are correct
     linear_vel_slice_start = 42
     linear_vel_slice_end = 45
@@ -100,20 +99,6 @@ def reward_imitation(
     foot_contacts_slice_start = 40
     foot_contacts_slice_end = 42
 
-    # ref_base_pos = reference_frame[root_pos_slice_start:root_pos_slice_end]
-    # base_pos = qpos[:3]
-
-    # ref_base_orientation_quat = reference_frame[
-    #     root_quat_slice_start:root_quat_slice_end
-    # ]
-    # ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
-    #     ref_base_orientation_quat
-    # )  # normalize the quat
-    # base_orientation = base_qpos[3:7]
-    # base_orientation = base_orientation / jp.linalg.norm(
-    #     base_orientation
-    # )  # normalize the quat
-
     ref_base_lin_vel = reference_frame[linear_vel_slice_start:linear_vel_slice_end]
     base_lin_vel = base_qvel[:3]
 
@@ -126,24 +111,9 @@ def reward_imitation(
     ref_joint_vels = reference_frame[joint_vels_slice_start:joint_vels_slice_end]
     joint_vel = joints_qvel
 
-    # ref_left_toe_pos = reference_frame[left_toe_pos_slice_start:left_toe_pos_slice_end]
-    # ref_right_toe_pos = reference_frame[right_toe_pos_slice_start:right_toe_pos_slice_end]
-
     ref_foot_contacts = reference_frame[
         foot_contacts_slice_start:foot_contacts_slice_end
     ]
-
-    # reward
-    # torso_pos_rew = jp.exp(-200.0 * jp.sum(jp.square(base_pos[:2] - ref_base_pos[:2]))) * w_torso_pos
-
-    # real quaternion angle doesn't have the expected  effect, switching back for now
-    # torso_orientation_rew = jp.exp(-20 * self.quaternion_angle(base_orientation, ref_base_orientation_quat)) * w_torso_orientation
-
-    # # TODO ignore yaw here, we just want xy orientation
-    # torso_orientation_rew = (
-    #     jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
-    #     * w_torso_orientation
-    # )
 
     lin_vel_xy_rew = (
         jp.exp(-8.0 * jp.sum(jp.square(base_lin_vel[:2] - ref_base_lin_vel[:2])))
