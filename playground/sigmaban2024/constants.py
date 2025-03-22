@@ -19,10 +19,7 @@ from etils import epath
 
 
 ROOT_PATH = epath.Path(__file__).parent
-# NO_HEAD_FLAT_TERRAIN_XML = ROOT_PATH / "xmls" / "scene_flat_terrain.xml"
-# NO_HEAD_ROUGH_TERRAIN_XML = ROOT_PATH / "xmls" / "scene_rough_terrain.xml"
-# NO_HEAD_FLAT_TERRAIN_BACKLASH_XML = ROOT_PATH / "xmls" / "scene_flat_terrain_nohead_backlash.xml"
-FLAT_TERRAIN_XML = ROOT_PATH / "xmls" / "scene.xml"
+FLAT_TERRAIN_XML = ROOT_PATH / "xmls" / "scene_flat_terrain.xml"
 # ROUGH_TERRAIN_XML = ROOT_PATH / "xmls" / "scene_rough_terrain.xml"
 # FLAT_TERRAIN_BACKLASH_XML = ROOT_PATH / "xmls" / "scene_flat_terrain_backlash.xml"
 # ROUGH_TERRAIN_BACKLASH_XML = ROOT_PATH / "xmls" / "scene_rough_terrain_backlash.xml"
@@ -31,6 +28,9 @@ FLAT_TERRAIN_XML = ROOT_PATH / "xmls" / "scene.xml"
 def task_to_xml(task_name: str) -> epath.Path:
     return {
         "flat_terrain": FLAT_TERRAIN_XML,
+        # "rough_terrain": ROUGH_TERRAIN_XML,
+        # "flat_terrain_backlash": FLAT_TERRAIN_BACKLASH_XML,
+        # "rough_terrain_backlash": ROUGH_TERRAIN_BACKLASH_XML,
     }[task_name]
 
 
@@ -40,17 +40,17 @@ FEET_SITES = [
 ]
 
 LEFT_FEET_GEOMS = [
-    "left_cleat_1",
-    "left_cleat_2",
-    "left_cleat_3",
-    "left_cleat_4",
+    "left_foot_cleat_back_left",
+    # "left_foot_cleat_back_right",
+    # "left_foot_cleat_front_left",
+    # "left_foot_cleat_front_right",
 ]
 
 RIGHT_FEET_GEOMS = [
-    "right_cleat_1",
-    "right_cleat_2",
-    "right_cleat_3",
-    "right_cleat_4",
+    "right_foot_cleat_back_left",
+    # "right_foot_cleat_back_right",
+    # "right_foot_cleat_front_left",
+    # "right_foot_cleat_front_right",
 ]
 
 HIP_JOINT_NAMES = [
@@ -85,7 +85,7 @@ FEET_GEOMS = LEFT_FEET_GEOMS + RIGHT_FEET_GEOMS
 
 FEET_POS_SENSOR = [f"{site}_pos" for site in FEET_SITES]
 
-ROOT_BODY = "tronc"
+ROOT_BODY = "torso_2023"
 
 GRAVITY_SENSOR = "upvector"
 GLOBAL_LINVEL_SENSOR = "global_linvel"

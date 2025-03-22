@@ -28,6 +28,7 @@ from mujoco_playground._src.collision import geoms_colliding
 
 from . import constants
 from . import base as sigmaban_base
+
 # from playground.common.utils import LowPassActionFilter
 from playground.common.poly_reference_motion import PolyReferenceMotion
 from playground.common.rewards import (
@@ -44,6 +45,7 @@ from playground.common.rewards import (
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
 USE_IMITATION_REWARD = False
+USE_MOTOR_SPEED_LIMITS = False
 
 
 def default_config() -> config_dict.ConfigDict:
@@ -53,10 +55,12 @@ def default_config() -> config_dict.ConfigDict:
         # episode_length=450,
         episode_length=1000,
         action_repeat=1,
+        # action_scale=0.25,
         action_scale=0.25,
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
+        max_motor_velocity=5.24,  # rad/s
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
@@ -163,7 +167,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         self._torso_body_id = self._mj_model.body(constants.ROOT_BODY).id
         self._torso_mass = self._mj_model.body_subtreemass[self._torso_body_id]
-        self._site_id = self._mj_model.site("imu").id
+        self._site_id = self._mj_model.site("trunk").id
 
         self._feet_site_id = np.array(
             [self._mj_model.site(name).id for name in constants.FEET_SITES]
@@ -285,9 +289,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
             "last_act": jp.zeros(self.mjx_model.nu),
             "last_last_act": jp.zeros(self.mjx_model.nu),
             "last_last_last_act": jp.zeros(self.mjx_model.nu),
-            "motor_targets": jp.zeros(self.mjx_model.nu),
+            "motor_targets": self._default_actuator,
             "feet_air_time": jp.zeros(2),
-            "last_contact": jp.zeros(2, dtype=bool),
+            "last_contact": jp.zeros(8, dtype=bool),
             "swing_peak": jp.zeros(2),
             # Push related.
             "push": jp.array([0.0, 0.0]),
@@ -387,10 +391,25 @@ class Joystick(sigmaban_base.SigmabanEnv):
         data = state.data.replace(qvel=qvel)
         state = state.replace(data=data)
 
+        ####
+
         motor_targets = (
             self._default_actuator + action_w_delay * self._config.action_scale
         )
+
+        if USE_MOTOR_SPEED_LIMITS:
+            prev_motor_targets = state.info["motor_targets"]
+
+            motor_targets = jp.clip(
+                motor_targets,
+                prev_motor_targets
+                - self._config.max_motor_velocity * self.dt,  # control dt
+                prev_motor_targets
+                + self._config.max_motor_velocity * self.dt,  # control dt
+            )
+
         data = mjx_env.step(self.mjx_model, state.data, motor_targets, self.n_substeps)
+
         state.info["motor_targets"] = motor_targets
 
         contact = jp.array(
@@ -423,7 +442,8 @@ class Joystick(sigmaban_base.SigmabanEnv):
         state.info["push_step"] += 1
         state.info["last_last_last_act"] = state.info["last_last_act"]
         state.info["last_last_act"] = state.info["last_act"]
-        state.info["last_act"] = action
+        state.info["last_act"] = action  # was
+        # state.info["last_act"] = motor_targets  # became
         state.info["rng"], cmd_rng = jax.random.split(state.info["rng"])
         state.info["command"] = jp.where(
             state.info["step"] > 500,
@@ -551,6 +571,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
                 info["last_act"],  # 10
                 info["last_last_act"],  # 10
                 info["last_last_last_act"],  # 10
+                info["motor_targets"],  # 10
                 contact,  # 2
                 info["current_reference_motion"],
             ]
