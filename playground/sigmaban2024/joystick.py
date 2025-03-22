@@ -291,7 +291,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
             "last_last_last_act": jp.zeros(self.mjx_model.nu),
             "motor_targets": self._default_actuator,
             "feet_air_time": jp.zeros(2),
-            "last_contact": jp.zeros(8, dtype=bool),
+            "last_contact": jp.zeros(2, dtype=bool),
             "swing_peak": jp.zeros(2),
             # Push related.
             "push": jp.array([0.0, 0.0]),
@@ -489,8 +489,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         )
 
         accelerometer = self.get_accelerometer(data)
-        # accelerometer[0] += 1.3 # TODO testing
-        accelerometer.at[0].set(accelerometer[0] + 1.3)
 
         info["rng"], noise_rng = jax.random.split(info["rng"])
         noisy_accelerometer = (
