@@ -63,7 +63,7 @@ def default_config() -> config_dict.ConfigDict:
         soft_joint_pos_limit_factor=0.95,
         max_motor_velocity=5.24,  # rad/s
         noise_config=config_dict.create(
-            level=1.0,  # Set to 0.0 to disable noise.
+            level=0.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
             action_max_delay=3,  # env steps
             imu_min_delay=0,  # env steps
@@ -86,8 +86,8 @@ def default_config() -> config_dict.ConfigDict:
                 # orientation=-0.5,
                 torques=-1.0e-3,
                 # action_rate=-0.375,  # was -1.5
-                action_rate=-0.3,  # was -1.5
-                stand_still=-0.3,  # was -1.0 TODO try to relax this a bit ?
+                action_rate=-0.1,  # was -0.3
+                stand_still=-0.1,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
                 # head_pos=-1.0,
@@ -97,7 +97,7 @@ def default_config() -> config_dict.ConfigDict:
         push_config=config_dict.create(
             enable=True,
             interval_range=[5.0, 10.0],
-            magnitude_range=[0.1, 1.0],
+            magnitude_range=[0.1, 10.0],
         ),
         lin_vel_x=[-0.15, 0.15],
         lin_vel_y=[-0.2, 0.2],
