@@ -360,7 +360,7 @@ class MjInfer:
                 self.last_last_last_action,
                 self.motor_targets,
                 contacts,
-                # ref if not self.standing else np.array([]),
+                ref if not self.standing else np.array([]),
             ]
         )
 
@@ -484,12 +484,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--reference_data",
         type=str,
-        default="playground/open_duck_mini_v2/data/polynomial_coefficients.pkl",
+        default="playground/sigmaban/data/polynomial_coefficients.pkl",
     )
     parser.add_argument(
         "--model_path",
         type=str,
-        default="playground/open_duck_mini_v2/xmls/scene_flat_terrain.xml",
+        default="playground/sigmaban/xmls/scene_flat_terrain.xml",
     )
     parser.add_argument("--standing", action="store_true", default=False)
 
