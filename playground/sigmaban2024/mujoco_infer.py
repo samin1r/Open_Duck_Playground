@@ -11,19 +11,19 @@ from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
 from playground.common.utils import LowPassActionFilter
 
 # from playground.open_duck_mini_v2 import constants
-from playground.open_duck_mini_v2 import base
+from playground.sigmaban2024 import base
 
-USE_MOTOR_SPEED_LIMITS = True
+USE_MOTOR_SPEED_LIMITS = False
 
 
 class MjInfer:
     def __init__(
         self, model_path: str, reference_data: str, onnx_model_path: str, standing: bool
     ):
+        print(model_path)
         self.model = mujoco.MjModel.from_xml_string(
             epath.Path(model_path).read_text(), assets=base.get_assets()
         )
-        print(model_path)
 
         self.standing = standing
         self.head_control_mode = self.standing
@@ -325,8 +325,8 @@ class MjInfer:
         return False
 
     def get_feet_contacts(self, data):
-        left_contact = self.check_contact(data, "foot_assembly", "floor")
-        right_contact = self.check_contact(data, "foot_assembly_2", "floor")
+        left_contact = self.check_contact(data, "left_foot___list_t0v6opd9rekumc_default", "floor")
+        right_contact = self.check_contact(data, "right_foot_", "floor")
         return left_contact, right_contact
 
     def get_obs(
@@ -360,7 +360,7 @@ class MjInfer:
                 self.last_last_last_action,
                 self.motor_targets,
                 contacts,
-                ref if not self.standing else np.array([]),
+                # ref if not self.standing else np.array([]),
             ]
         )
 
@@ -442,7 +442,8 @@ class MjInfer:
                             self.commands,
                         )
                         self.saved_obs.append(obs)
-                        action = self.policy.infer(obs)
+                        # action = self.policy.infer(obs)
+                        action =np.zeros(20)
 
                         # self.action_filter.push(action)
                         # action = self.action_filter.get_filtered_action()
