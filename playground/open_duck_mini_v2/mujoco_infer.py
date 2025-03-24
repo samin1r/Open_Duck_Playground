@@ -39,6 +39,13 @@ class MjInfer:
 
         if not self.standing:
             self.PRM = PolyReferenceMotion(reference_data)
+            # Initialize phase and phase_dt for phase encoding
+            self.phase = 0.0
+            self.phase_dt = 2 * np.pi / self.PRM.nb_steps_in_period
+        else:
+            # Default values when not using imitation reward
+            self.phase = 0.0
+            self.phase_dt = 2 * np.pi / 100
 
         NUM_DOFS = self.model.nu
         self.floating_base_name = [
@@ -120,9 +127,9 @@ class MjInfer:
 
         self.policy = OnnxInfer(onnx_model_path, awd=True)
 
-        self.COMMANDS_RANGE_X = [-0.15, 0.2]
-        self.COMMANDS_RANGE_Y = [-0.2, 0.2]
-        self.COMMANDS_RANGE_THETA = [-1.0, 1.0]  # [-1.0, 1.0]
+        self.COMMANDS_RANGE_X = [-0.5, 0.5]
+        self.COMMANDS_RANGE_Y = [-0.5, 0.5]
+        self.COMMANDS_RANGE_THETA = [-1.5, 1.5]  # [-1.0, 1.0]
 
         self.NECK_PITCH_RANGE = [-0.34, 1.1]
         self.HEAD_PITCH_RANGE = [-0.78, 0.78]
@@ -347,6 +354,10 @@ class MjInfer:
         if not self.standing:
             ref = self.PRM.get_reference_motion(*command[:3], self.imitation_i)
 
+        # Calculate sine and cosine of phase for observation
+        phase_sin = np.sin(self.phase)
+        phase_cos = np.cos(self.phase)
+
         obs = np.concatenate(
             [
                 gyro,
@@ -360,7 +371,8 @@ class MjInfer:
                 self.last_last_last_action,
                 self.motor_targets,
                 contacts,
-                ref if not self.standing else np.array([]),
+                # Replace direct imitation_i with sine/cosine encoding
+                [phase_sin, phase_cos],
             ]
         )
 
@@ -368,40 +380,40 @@ class MjInfer:
 
     def key_callback(self, keycode):
         print(f"key: {keycode}")
-        if keycode == 72:  # h
+        if (keycode == 72):  # h
             self.head_control_mode = not self.head_control_mode
         lin_vel_x = 0
         lin_vel_y = 0
         ang_vel = 0
         if not self.head_control_mode:
-            if keycode == 265:  # arrow up
+            if (keycode == 265):  # arrow up
                 lin_vel_x = self.COMMANDS_RANGE_X[1]
-            if keycode == 264:  # arrow down
+            if (keycode == 264):  # arrow down
                 lin_vel_x = self.COMMANDS_RANGE_X[0]
-            if keycode == 263:  # arrow left
+            if (keycode == 263):  # arrow left
                 lin_vel_y = self.COMMANDS_RANGE_Y[1]
-            if keycode == 262:  # arrow right
+            if (keycode == 262):  # arrow right
                 lin_vel_y = self.COMMANDS_RANGE_Y[0]
-            if keycode == 81:  # a
+            if (keycode == 81):  # a
                 ang_vel = self.COMMANDS_RANGE_THETA[1]
-            if keycode == 69:  # e
+            if (keycode == 69):  # e
                 ang_vel = self.COMMANDS_RANGE_THETA[0]
         else:
             neck_pitch = 0
             head_pitch = 0
             head_yaw = 0
             head_roll = 0
-            if keycode == 265:  # arrow up
+            if (keycode == 265):  # arrow up
                 head_pitch = self.NECK_PITCH_RANGE[1]
-            if keycode == 264:  # arrow down
+            if (keycode == 264):  # arrow down
                 head_pitch = self.NECK_PITCH_RANGE[0]
-            if keycode == 263:  # arrow left
+            if (keycode == 263):  # arrow left
                 head_yaw = self.HEAD_YAW_RANGE[1]
-            if keycode == 262:  # arrow right
+            if (keycode == 262):  # arrow right
                 head_yaw = self.HEAD_YAW_RANGE[0]
-            if keycode == 81:  # a
+            if (keycode == 81):  # a
                 head_roll = self.HEAD_ROLL_RANGE[1]
-            if keycode == 69:  # e
+            if (keycode == 69):  # e
                 head_roll = self.HEAD_ROLL_RANGE[0]
 
             self.commands[3] = neck_pitch
@@ -437,6 +449,12 @@ class MjInfer:
                             self.imitation_i = (
                                 self.imitation_i % self.PRM.nb_steps_in_period
                             )
+                            # Update phase to match the environment implementation
+                            self.phase = (self.imitation_i * self.phase_dt) % (2 * np.pi)
+                        else:
+                            # Update phase even when standing for consistency
+                            self.phase = (self.phase + self.phase_dt) % (2 * np.pi)
+
                         obs = self.get_obs(
                             self.data,
                             self.commands,

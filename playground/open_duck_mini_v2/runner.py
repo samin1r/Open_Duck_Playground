@@ -1,6 +1,7 @@
 """Runs training and evaluation loop for Open Duck Mini V2."""
 
 import argparse
+import os
 
 from playground.common import randomize
 from playground.common.runner import BaseRunner
@@ -28,7 +29,8 @@ class OpenDuckMiniV2Runner(BaseRunner):
         self.obs_size = int(
             self.env.observation_size["state"][0]
         )  # 0: state 1: privileged_state
-        self.restore_checkpoint_path = args.restore_checkpoint_path
+        if self.restore_checkpoint_path:
+            self.restore_checkpoint_path = os.path.abspath(args.restore_checkpoint_path)
         print(f"Observation size: {self.obs_size}")
 
 

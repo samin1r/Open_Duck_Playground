@@ -52,17 +52,17 @@ def default_config() -> config_dict.ConfigDict:
         sim_dt=0.002,
         episode_length=1000,
         action_repeat=1,
-        action_scale=0.25,
+        action_scale=0.5,
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
         max_motor_velocity=5.24,  # rad/s
         noise_config=config_dict.create(
-            level=1.0,  # Set to 0.0 to disable noise.
+            level=0.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
-            action_max_delay=3,  # env steps
+            action_max_delay=1,  # env steps
             imu_min_delay=0,  # env steps
-            imu_max_delay=3,  # env steps
+            imu_max_delay=1,  # env steps
             scales=config_dict.create(
                 hip_pos=0.05,  # rad, for each hip joint # was 0.03
                 knee_pos=0.05,  # rad, for each knee joint
@@ -77,22 +77,22 @@ def default_config() -> config_dict.ConfigDict:
         reward_config=config_dict.create(
             scales=config_dict.create(
                 tracking_lin_vel=2.5,
-                tracking_ang_vel=8.0,
-                torques=-1.0e-3,
-                action_rate=-0.2,  # was -1.5
-                stand_still=-0.3,  # was -1.0 TODO try to relax this a bit ?
-                alive=20.0,
+                tracking_ang_vel=2.0,
+                torques=-2.5e-5,
+                action_rate=-0.01,  # was -1.5
+                stand_still=-0.1,  # was -1.0 TODO try to relax this a bit ?
+                alive=0.0,
                 imitation=1.0,
             ),
-            tracking_sigma=0.01,  # was working at 0.01
+            tracking_sigma=0.25,  # was working at 0.01
         ),
         push_config=config_dict.create(
-            enable=True,
+            enable=False,
             interval_range=[5.0, 10.0],
             magnitude_range=[0.1, 1.0],
         ),
-        lin_vel_x=[-0.15, 0.15],
-        lin_vel_y=[-0.2, 0.2],
+        lin_vel_x=[-0.3, 0.3],
+        lin_vel_y=[-0.3, 0.3],
         ang_vel_yaw=[-1.0, 1.0],  # [-1.0, 1.0]
         neck_pitch_range=[-0.34, 1.1],
         head_pitch_range=[-0.78, 0.78],
@@ -250,13 +250,13 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         # )
 
         qvel = self.set_floating_base_qvel(
-            jax.random.uniform(key, (6,), minval=-0.5, maxval=0.5), qvel
+            jax.random.uniform(key, (6,), minval=-0.05, maxval=0.05), qvel
         )
         # print(f'DEBUG3 base qvel: {qvel}')
         ctrl = self.get_actuator_joints_qpos(qpos)
         # print(f'DEBUG4 ctrl: {ctrl}')
         data = mjx_env.init(self.mjx_model, qpos=qpos, qvel=qvel, ctrl=ctrl)
-        rng, cmd_rng = jax.random.split(rng)
+        rng, cmd_rng = jax.random.split(rng) 
         cmd = self.sample_command(cmd_rng)
 
         # Sample push interval.
@@ -274,6 +274,14 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             )
         else:
             current_reference_motion = jp.zeros(0)
+
+        # Add phase initialization similar to Berkeley environment
+        phase = jp.array(0.0)
+        # Calculate phase_dt based on the period of reference motion
+        if USE_IMITATION_REWARD:
+            phase_dt = 2 * jp.pi / self.PRM.nb_steps_in_period
+        else:
+            phase_dt = 2 * jp.pi / 100  # Default period if not using imitation
 
         info = {
             "rng": rng,
@@ -298,6 +306,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             # imitation related
             "imitation_i": 0,
             "current_reference_motion": current_reference_motion,
+            # Phase related
+            "phase": phase,
+            "phase_dt": phase_dt,
         }
 
         metrics = {}
@@ -326,8 +337,13 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             state.info["imitation_i"] = (
                 state.info["imitation_i"] % self.PRM.nb_steps_in_period
             )  # not critical, is already moduloed in get_reference_motion
+            
+            # Update phase based on imitation_i
+            state.info["phase"] = (state.info["imitation_i"] * state.info["phase_dt"]) % (2 * jp.pi)
         else:
             state.info["imitation_i"] = 0
+            # Still update phase for consistency even when not using imitation
+            state.info["phase"] = (state.info["phase"] + state.info["phase_dt"]) % (2 * jp.pi)
 
         if USE_IMITATION_REWARD:
             state.info["current_reference_motion"] = self.PRM.get_reference_motion(
@@ -552,6 +568,10 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         #     * self._config.noise_config.scales.linvel
         # )
 
+        # Calculate sine and cosine of phase for observation
+        phase_sin = jp.sin(info["phase"])
+        phase_cos = jp.cos(info["phase"])
+
         state = jp.hstack(
             [
                 # noisy_linvel,  # 3
@@ -567,7 +587,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["last_last_last_act"],  # 10
                 info["motor_targets"],  # 10
                 contact,  # 2
-                info["current_reference_motion"],
+                # Replace direct imitation_i with sine/cosine encoding
+                phase_sin,  # 1
+                phase_cos,  # 1
             ]
         )
 
@@ -591,6 +613,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 contact,  # 2
                 feet_vel,  # 4*3
                 info["feet_air_time"],  # 2
+                # Keep the raw imitation_i in privileged state for debugging/metrics
+                info["imitation_i"],
                 info["current_reference_motion"],
             ]
         )
