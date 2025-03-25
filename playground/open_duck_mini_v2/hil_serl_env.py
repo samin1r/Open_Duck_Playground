@@ -13,6 +13,7 @@ from playground.common.rewards_numpy import (
 from playground.open_duck_mini_v2.custom_rewards_numpy import reward_imitation
 
 # TODO torch ?
+# TODO add option to run the viewer too
 
 
 class Env(MJInferBase):
@@ -39,7 +40,14 @@ class Env(MJInferBase):
         # x vel, y vel, z vel, neck_pitch, head_pitch, head_yaw, head_roll
         self.commands = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-        pass
+        self.lin_vel_x = [-0.15, 0.15]
+        self.lin_vel_y = [-0.2, 0.2]
+        self.ang_vel_yaw = [-1.0, 1.0]
+        self.neck_pitch_range = [-0.34, 1.1]
+        self.head_pitch_range = [-0.78, 0.78]
+        self.head_yaw_range = [-1.5, 1.5]
+        self.head_roll_range = [-0.5, 0.5]
+        self.head_range_factor = 1.0
 
     def step(self, action):
         self._tick_imitation_stuff()
@@ -171,5 +179,5 @@ class Env(MJInferBase):
         )
 
     def _sample_command(self):
-        # TODO
+        # TODO sample command every N steps
         pass
