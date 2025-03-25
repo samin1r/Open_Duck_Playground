@@ -89,7 +89,7 @@ def default_config() -> config_dict.ConfigDict:
         push_config=config_dict.create(
             enable=True,
             interval_range=[2.0, 5.0],
-            magnitude_range=[0.1, 1.0],
+            magnitude_range=[0.1, 1.5],
         ),
         lin_vel_x=[-0.15, 0.15],
         lin_vel_y=[-0.2, 0.2],
@@ -416,7 +416,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 + self._config.max_motor_velocity * self.dt,  # control dt
             )
 
-        # motor_targets.at[5:9].set(state.info["command"][3:])  # head joints
+        motor_targets.at[5:9].set(state.info["command"][3:])  # head joints
         data = mjx_env.step(self.mjx_model, state.data, motor_targets, self.n_substeps)
 
         state.info["motor_targets"] = motor_targets

@@ -175,6 +175,8 @@ class MjInfer:
 
         self.max_motor_velocity = 5.24  # rad/s
 
+        self.phase_frequency_factor = 1.0
+
         print(f"joint names: {self.joint_names}")
         print(f"actuator names: {self.actuator_names}")
         print(f"backlash joint names: {self.backlash_joint_names}")
@@ -389,6 +391,10 @@ class MjInfer:
                 ang_vel = self.COMMANDS_RANGE_THETA[1]
             if keycode == 69:  # e
                 ang_vel = self.COMMANDS_RANGE_THETA[0]
+            if keycode == 80:  # p
+                self.phase_frequency_factor += 0.1
+            if keycode == 59:  # m
+                self.phase_frequency_factor -= 0.1
         else:
             neck_pitch = 0
             head_pitch = 0
@@ -436,7 +442,7 @@ class MjInfer:
 
                     if counter % self.decimation == 0:
                         if not self.standing:
-                            self.imitation_i += 1
+                            self.imitation_i += 1.0 * self.phase_frequency_factor
                             self.imitation_i = (
                                 self.imitation_i % self.PRM.nb_steps_in_period
                             )
