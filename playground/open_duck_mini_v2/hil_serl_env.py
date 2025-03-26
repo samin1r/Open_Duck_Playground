@@ -1,6 +1,7 @@
 import numpy as np
 from playground.open_duck_mini_v2.mujoco_infer_base import MJInferBase
 import mujoco
+import mujoco.viewer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
 from playground.common.rewards_numpy import (
     reward_tracking_lin_vel,
@@ -13,12 +14,21 @@ from playground.common.rewards_numpy import (
 from playground.open_duck_mini_v2.custom_rewards_numpy import reward_imitation
 
 # TODO torch ?
-# TODO add option to run the viewer too
 
 
 class Env(MJInferBase):
-    def __init__(self, model_path: str, reference_data: str):
+    def __init__(self, model_path: str, reference_data: str, visualize=False):
         super().__init__(model_path)
+
+        self.visualize = visualize
+        if self.visualize:
+            self.viewer = mujoco.viewer.launch_passive(
+                self.model,
+                self.data,
+                show_left_ui=False,
+                show_right_ui=False,
+                # key_callback=self.key_callback,
+            )
 
         self.imitation_i = 0
         self.imitation_phase = np.array([0, 0])
@@ -74,6 +84,9 @@ class Env(MJInferBase):
         for _ in range(self.decimation):
             mujoco.mj_step(self.model, self.data)
 
+        if self.visualize:
+            self.viewer.sync()
+
         obs = self._get_obs()
         reward = self._get_reward()
         truncated = self._truncated()
@@ -89,7 +102,22 @@ class Env(MJInferBase):
         )
 
     def reset(self):
-        # TODO
+
+        self.data.qpos[:] = self.model.keyframe("home").qpos
+        self.data.ctrl[:] = self.default_actuator
+        self.data.qvel[:] = np.zeros(len(self.data.qvel))
+
+        self.imitation_i = 0
+        self.imitation_phase = np.array([0, 0])
+
+        self.motor_targets = self.default_actuator
+        self.prev_motor_targets = self.default_actuator
+
+        self.last_action = np.zeros(self.num_dofs)
+        self.last_last_action = np.zeros(self.num_dofs)
+        self.last_last_last_action = np.zeros(self.num_dofs)
+
+        self.commands = self._sample_command()
 
         return self._get_obs()
 
@@ -100,8 +128,8 @@ class Env(MJInferBase):
 
         obs = np.hstack(
             [
-                self.get_gyro(),  # 3
-                self.get_accelerometer(),  # 3
+                self.get_gyro(self.data),  # 3
+                self.get_accelerometer(self.data),  # 3
                 self.commands,  # 3
                 joint_angles - self.default_actuator,  # 14
                 joint_vel * self.dof_vel_scale,  # 14
@@ -109,12 +137,15 @@ class Env(MJInferBase):
                 self.last_last_action,  # 14
                 self.last_last_last_action,  # 14
                 self.motor_targets,  # 14
-                self.get_feet_contacts(),  # 2
+                self.get_feet_contacts(self.data),  # 2
                 self.imitation_phase,
             ]
         )
 
-        return obs
+        ret = {
+            "observation.state": obs,
+        }
+        return ret
 
     def _get_reward(self):
         lin_vel = reward_tracking_lin_vel(
@@ -133,15 +164,15 @@ class Env(MJInferBase):
             self.get_floating_base_qvel(self.data.qvel),
             self.get_actuator_joints_qpos(self.data.qpos),
             self.get_actuator_joints_qvel(self.data.qvel),
-            self.get_feet_contacts(),
+            self.get_feet_contacts(self.data),
             self.PRM.get_reference_motion(*self.commands[:3], self.imitation_i),
             self.commands,
             True,
         )
         stand_still = cost_stand_still(
             self.commands,
-            self.get_floating_base_qpos(self.data.qpos),
-            self.get_floating_base_qvel(self.data.qvel),
+            self.get_actuator_joints_qpos(self.data.qpos),
+            self.get_actuator_joints_qvel(self.data.qvel),
             self.default_actuator,
             ignore_head=False,
         )
@@ -179,5 +210,32 @@ class Env(MJInferBase):
         )
 
     def _sample_command(self):
-        # TODO sample command every N steps
-        pass
+
+        x_vel = np.random.uniform(self.lin_vel_x[0], self.lin_vel_x[1])
+        y_vel = np.random.uniform(self.lin_vel_y[0], self.lin_vel_y[1])
+        ang_vel = np.random.uniform(self.ang_vel_yaw[0], self.ang_vel_yaw[1])
+        neck_pitch = np.random.uniform(
+            self.neck_pitch_range[0], self.neck_pitch_range[1]
+        )
+        head_pitch = np.random.uniform(
+            self.head_pitch_range[0], self.head_pitch_range[1]
+        )
+        head_yaw = np.random.uniform(self.head_yaw_range[0], self.head_yaw_range[1])
+        head_roll = np.random.uniform(self.head_roll_range[0], self.head_roll_range[1])
+
+        return [x_vel, y_vel, ang_vel, neck_pitch, head_pitch, head_yaw, head_roll]
+
+
+if __name__ == "__main__":
+    env = Env(
+        "playground/open_duck_mini_v2/xmls/scene_flat_terrain_backlash.xml",
+        "playground/open_duck_mini_v2/data/polynomial_coefficients.pkl",
+        visualize=True,
+    )
+    obs = env.reset()
+    for _ in range(10000):
+        action = np.random.randn(14)
+        obs, reward, truncated, done, info = env.step(action)
+        print(reward)
+        if done:
+            break

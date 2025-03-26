@@ -130,7 +130,7 @@ def reward_imitation(
     joint_vel_rew = -np.sum(np.square(joint_vel - ref_joint_vels)) * w_joint_vel
 
     ref_foot_contacts = np.where(
-        ref_foot_contacts > 0.5,
+        np.array(ref_foot_contacts) > 0.5,
         np.ones_like(ref_foot_contacts),
         np.zeros_like(ref_foot_contacts),
     )
