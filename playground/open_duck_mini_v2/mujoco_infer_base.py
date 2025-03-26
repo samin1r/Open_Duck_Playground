@@ -110,6 +110,11 @@ class MJInferBase:
             self.model, mujoco.mjtObj.mjOBJ_SITE, "imu"
         )
 
+        self.gravity_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SENSOR, "upvector"
+        )
+        self.gravity_dimensions = 3
+
         self.init_pos = np.array(
             self.get_all_joints_qpos(self.model.keyframe("home").qpos)
         )  # pose of all the joints (no floating base)
@@ -243,8 +248,13 @@ class MJInferBase:
     def get_linvel(self, data):
         return data.sensordata[self.linvel_id : self.linvel_id + self.linvel_dimensions]
 
+    # def get_gravity(self, data):
+    #     return data.site_xmat[self.imu_site_id].reshape((3, 3)).T @ np.array([0, 0, -1])
+
     def get_gravity(self, data):
-        return data.site_xmat[self.imu_site_id].reshape((3, 3)).T @ np.array([0, 0, -1])
+        return data.sensordata[
+            self.gravity_id : self.gravity_id + self.gravity_dimensions
+        ]
 
     def check_contact(self, data, body1_name, body2_name):
         body1_id = data.body(body1_name).id

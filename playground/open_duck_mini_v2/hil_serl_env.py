@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from playground.open_duck_mini_v2.mujoco_infer_base import MJInferBase
 import mujoco
@@ -37,6 +38,8 @@ class Env(MJInferBase):
         self.action_scale = 0.25
         self.max_motor_velocity = 5.24  # rad/s
         self.tracking_sigma = 0.01
+        self.max_episode_length = 1000
+        self.episode_i = 0
 
         self.PRM = PolyReferenceMotion(reference_data)
 
@@ -61,6 +64,12 @@ class Env(MJInferBase):
 
     def step(self, action):
         self._tick_imitation_stuff()
+        
+        truncated = False
+        self.episode_i += 1
+        if self.episode_i > self.max_episode_length:
+            truncated = True
+            self.episode_i = 0
 
         self.last_last_last_action = self.last_last_action.copy()
         self.last_last_action = self.last_action.copy()
@@ -89,8 +98,7 @@ class Env(MJInferBase):
 
         obs = self._get_obs()
         reward = self._get_reward()
-        truncated = self._truncated()
-        done = self._done()
+        done = self._get_termination()
         info = {}
 
         return (
@@ -188,16 +196,14 @@ class Env(MJInferBase):
         )
         return reward
 
-    def _truncated(self):
-        fall_termination = self.get_gravity(self.data)[-1] < 0.0
+    def _get_termination(self):
+        fall_termination = self.get_accelerometer(self.data)[-1] < 0.0
+
         return (
             fall_termination
             | np.isnan(self.data.qpos).any()
             | np.isnan(self.data.qvel).any()
         )
-
-    def _done(self):
-        return False
 
     def _tick_imitation_stuff(self):
         self.imitation_i += 1
@@ -235,7 +241,11 @@ if __name__ == "__main__":
     obs = env.reset()
     for _ in range(10000):
         action = np.random.randn(14)
+        # action = np.zeros(14)
         obs, reward, truncated, done, info = env.step(action)
-        print(reward)
-        if done:
-            break
+        if done or truncated:
+            obs = env.reset()
+        # print(reward)
+        # if done:
+        #     break
+        time.sleep(0.02)
