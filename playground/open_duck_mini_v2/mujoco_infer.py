@@ -73,9 +73,6 @@ class MjInfer(MJInferBase):
         accelerometer = self.get_accelerometer(data)
         accelerometer[0] += 1.3
 
-        gravity = self.get_gravity(data)
-        print("a", gravity)
-
         joint_angles = self.get_actuator_joints_qpos(data.qpos)
         joint_vel = self.get_actuator_joints_qvel(data.qvel)
 
