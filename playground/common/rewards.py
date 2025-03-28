@@ -15,11 +15,8 @@ def reward_tracking_lin_vel(
 ) -> jax.Array:
     # lin_vel_error = jp.sum(jp.square(commands[:2] - local_vel[:2]))
     # return jp.nan_to_num(jp.exp(-lin_vel_error / self._config.reward_config.tracking_sigma))
-    y_tol = 0.1
-    error_x = jp.square(commands[0] - local_vel[0])
-    error_y = jp.clip(jp.abs(local_vel[1] - commands[1]) - y_tol, 0.0, None)
-    lin_vel_error = error_x + jp.square(error_y)
-    return jp.nan_to_num(jp.exp(-lin_vel_error / tracking_sigma))
+    error = jp.sum(jp.square(commands[:2] - local_vel[:2]))
+    return jp.nan_to_num(jp.exp(-error / tracking_sigma))
 
 
 def reward_tracking_ang_vel(
@@ -128,7 +125,7 @@ def reward_alive() -> jax.Array:
 # Pose-related rewards.
 
 
-def cost_head_pos(
+def reward_head_pos(
     joints_qpos: jax.Array,
     joints_qvel: jax.Array,
     cmd: jax.Array,
@@ -140,13 +137,12 @@ def cost_head_pos(
 
     # target_head_qvel = jp.zeros_like(head_cmd)
 
-    head_pos_error = jp.sum(jp.square(head_pos - head_cmd))
+    head_pos_error = jp.exp(-10*jp.sum(jp.square(head_pos - head_cmd)))
 
     # head_vel_error = jp.sum(jp.square(head_vel - target_head_qvel))
 
     return jp.nan_to_num(head_pos_error) * (move_cmd_norm > 0.01)
     # return jp.nan_to_num(head_pos_error + head_vel_error)
-
 
 # FIXME
 def cost_joint_deviation_hip(

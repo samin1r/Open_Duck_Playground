@@ -38,7 +38,7 @@ from playground.common.rewards import (
     cost_action_rate,
     cost_stand_still,
     reward_alive,
-    cost_head_pos,
+    reward_head_pos,
 )
 from playground.open_duck_mini_v2.custom_rewards import reward_imitation
 
@@ -53,7 +53,7 @@ def default_config() -> config_dict.ConfigDict:
         sim_dt=0.002,
         episode_length=1000,
         action_repeat=1,
-        action_scale=0.25,
+        action_scale=0.3,
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
@@ -61,14 +61,14 @@ def default_config() -> config_dict.ConfigDict:
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
-            action_max_delay=3,  # env steps
+            action_max_delay=1,  # env steps
             imu_min_delay=0,  # env steps
-            imu_max_delay=3,  # env steps
+            imu_max_delay=1,  # env steps
             scales=config_dict.create(
                 hip_pos=0.03,  # rad, for each hip joint
                 knee_pos=0.05,  # rad, for each knee joint
                 ankle_pos=0.08,  # rad, for each ankle joint
-                joint_vel=2.5,  # rad/s # Was 1.5
+                joint_vel=1.5,  # rad/s # Was 1.5
                 gravity=0.1,
                 linvel=0.1,
                 gyro=0.1,
@@ -78,23 +78,23 @@ def default_config() -> config_dict.ConfigDict:
         reward_config=config_dict.create(
             scales=config_dict.create(
                 tracking_lin_vel=2.5,
-                tracking_ang_vel=6.0,
-                torques=-1.0e-3,
-                action_rate=-0.5,  # was -1.5
-                stand_still=-0.2,  # was -1.0 TODO try to relax this a bit ?
+                tracking_ang_vel=2.5,
+                torques=-1.0e-5,
+                action_rate=-0.01,  # was -1.5
+                stand_still=-0.05,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
                 imitation=1.0,
-                head_pos=-0.2,
+                head_pos=2.0,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
         push_config=config_dict.create(
-            enable=True,
+            enable=False,
             interval_range=[2.0, 5.0],
             magnitude_range=[0.1, 1.5],
         ),
-        lin_vel_x=[-0.15, 0.15],
-        lin_vel_y=[-0.2, 0.2],
+        lin_vel_x=[-0.3, 0.3],
+        lin_vel_y=[-0.3, 0.3],
         ang_vel_yaw=[-1.0, 1.0],  # [-1.0, 1.0]
         neck_pitch_range=[-0.34, 1.1],
         head_pitch_range=[-0.78, 0.78],
@@ -329,6 +329,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             state.info["imitation_i"] = (
                 state.info["imitation_i"] % self.PRM.nb_steps_in_period
             )  # not critical, is already moduloed in get_reference_motion
+            state.info["imitation_i"] = jp.where(jp.linalg.norm(state.info["command"]) > 0.01,
+                                                 state.info["imitation_i"], 0)
             state.info["imitation_phase"] = jp.array(
                 [
                     jp.cos(
@@ -666,7 +668,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 self._default_actuator,
                 ignore_head=True,
             ),
-            "head_pos": cost_head_pos(
+            "head_pos": reward_head_pos(
                 self.get_actuator_joints_qpos(data.qpos),
                 self.get_actuator_joints_qvel(data.qpos),
                 info["command"],

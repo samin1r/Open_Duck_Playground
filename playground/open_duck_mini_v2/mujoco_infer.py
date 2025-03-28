@@ -33,7 +33,7 @@ class MjInfer:
         self.angularVelocityScale = 1.0
         self.dof_pos_scale = 1.0
         self.dof_vel_scale = 0.05
-        self.action_scale = 0.25
+        self.action_scale = 0.3
 
         self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
@@ -176,6 +176,8 @@ class MjInfer:
         self.max_motor_velocity = 5.24  # rad/s
 
         self.phase_frequency_factor = 1.0
+        self.phase_active = True
+        self.waiting_for_zero = False
 
         print(f"joint names: {self.joint_names}")
         print(f"actuator names: {self.actuator_names}")
@@ -392,9 +394,14 @@ class MjInfer:
             if keycode == 69:  # e
                 ang_vel = self.COMMANDS_RANGE_THETA[0]
             if keycode == 80:  # p
-                self.phase_frequency_factor += 0.1
-            if keycode == 59:  # m
-                self.phase_frequency_factor -= 0.1
+                if self.phase_active:
+                    self.phase_active = False
+                    self.waiting_for_zero = True
+                else:
+                    self.phase_active = True
+                    self.waiting_for_zero = False
+                print(f"Phase advancement {'enabled' if self.phase_active else 'disabled'}")
+
         else:
             neck_pitch = 0
             head_pitch = 0
@@ -442,10 +449,19 @@ class MjInfer:
 
                     if counter % self.decimation == 0:
                         if not self.standing:
-                            self.imitation_i += 1.0 * self.phase_frequency_factor
-                            self.imitation_i = (
-                                self.imitation_i % self.PRM.nb_steps_in_period
-                            )
+                            # Update phase only if active or waiting to reach zero
+                            if self.phase_active or self.waiting_for_zero:
+                                self.imitation_i += 1.0 * self.phase_frequency_factor
+                                self.imitation_i = (
+                                    self.imitation_i % self.PRM.nb_steps_in_period
+                                )
+                                
+                                # If we're waiting for zero and we've reached it, stop phase advancement
+                                if self.waiting_for_zero and self.imitation_i < 1.0:
+                                    self.imitation_i = 0
+                                    self.waiting_for_zero = False
+                                    print("Phase advancement stopped at zero")
+                                    
                             self.imitation_phase = np.array(
                                 [
                                     np.cos(self.imitation_i / self.PRM.nb_steps_in_period * 2 * np.pi),
