@@ -61,7 +61,7 @@ def default_config() -> config_dict.ConfigDict:
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
-            action_max_delay=3,  # env steps
+            action_max_delay=2,  # env steps
             imu_min_delay=0,  # env steps
             imu_max_delay=3,  # env steps
             scales=config_dict.create(
