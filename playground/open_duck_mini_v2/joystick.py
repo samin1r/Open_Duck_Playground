@@ -38,7 +38,7 @@ from playground.common.rewards import (
     cost_action_rate,
     cost_stand_still,
     reward_alive,
-    cost_head_vel,
+    # cost_head_vel,
 )
 from playground.open_duck_mini_v2.custom_rewards import reward_imitation
 
@@ -672,9 +672,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             #     self.get_actuator_joints_qvel(data.qpos),
             #     info["command"],
             # ),
-            "head_vel": cost_head_vel(
-                self.get_actuator_joints_qvel(data.qvel),
-            ),
+            # "head_vel": cost_head_vel(
+            #     self.get_actuator_joints_qvel(data.qvel),
+            # ),
         }
 
         return ret
