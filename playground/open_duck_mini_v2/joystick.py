@@ -61,14 +61,14 @@ def default_config() -> config_dict.ConfigDict:
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
-            action_max_delay=1,  # env steps
+            action_max_delay=2,  # env steps
             imu_min_delay=0,  # env steps
-            imu_max_delay=1,  # env steps
+            imu_max_delay=2,  # env steps
             scales=config_dict.create(
                 hip_pos=0.03,  # rad, for each hip joint
                 knee_pos=0.05,  # rad, for each knee joint
                 ankle_pos=0.08,  # rad, for each ankle joint
-                joint_vel=1.5,  # rad/s # Was 1.5
+                joint_vel=2.5,  # rad/s # Was 1.5
                 gravity=0.1,
                 linvel=0.1,
                 gyro=0.1,
@@ -79,8 +79,8 @@ def default_config() -> config_dict.ConfigDict:
             scales=config_dict.create(
                 tracking_lin_vel=2.5,
                 tracking_ang_vel=2.5,
-                torques=-1.0e-5,
-                action_rate=-0.01,  # was -1.5
+                torques=-1.0e-3,
+                action_rate=-0.2,  # was -1.5
                 stand_still=-0.05,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
                 imitation=1.0,
@@ -89,9 +89,9 @@ def default_config() -> config_dict.ConfigDict:
             tracking_sigma=0.01,  # was working at 0.01
         ),
         push_config=config_dict.create(
-            enable=False,
+            enable=True,
             interval_range=[2.0, 5.0],
-            magnitude_range=[0.1, 1.5],
+            magnitude_range=[0.1, 0.5],
         ),
         lin_vel_x=[-0.3, 0.3],
         lin_vel_y=[-0.3, 0.3],
