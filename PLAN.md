@@ -1,6 +1,6 @@
-- [] Validate that main is still the best transferable policy
-- [] Can action_max_delay be reduced to 2 ?
-- [] Can action_max_delay be reduced to 1 ?
+- [X] Validate that main is still the best transferable policy
+- [X] Can action_max_delay be reduced to 2 ? NO
+- [X] Can action_max_delay be reduced to 1 ? NO
 - [] Does using mansin's weights in the imitation reward :
   - Improve the simulation behavior (walking nicely in all directions)
   - Still transfers ? 
