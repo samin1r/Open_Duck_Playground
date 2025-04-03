@@ -2,8 +2,8 @@
 - [X] Can action_max_delay be reduced to 2 ? NO
 - [X] Can action_max_delay be reduced to 1 ? NO
 - [] Does using mansin's weights in the imitation reward :
-  - Improve the simulation behavior (walking nicely in all directions)
-  - Still transfers ? 
+  - Improve the simulation behavior (walking nicely in all directions) -> kind of, but it moves more
+  - Still transfers -> transfer is less good, but not catastrophic? 
 ```
     w_torso_pos = 0.0
     w_torso_orientation = 0.0

@@ -17,26 +17,26 @@ def reward_imitation(
     # TODO don't reward for moving when the command is zero.
     cmd_norm = jp.linalg.norm(cmd[:3])
 
-    # w_torso_pos = 1.0
-    # w_torso_orientation = 1.0
-    # w_lin_vel_xy = 1.0
-    # w_lin_vel_z = 1.0
-    # w_ang_vel_xy = 0.5
-    # w_ang_vel_z = 0.5
-    # w_joint_pos = 15.0
-    # w_joint_vel = 1.0e-3
-    # w_contact = 1.0
-
-    # Mansin
-    w_torso_pos = 0.0
-    w_torso_orientation = 0.0
-    w_lin_vel_xy = 0.0
-    w_lin_vel_z = 0.0
-    w_ang_vel_xy = 0.0
-    w_ang_vel_z = 0.0
+    w_torso_pos = 1.0
+    w_torso_orientation = 1.0
+    w_lin_vel_xy = 1.0
+    w_lin_vel_z = 1.0
+    w_ang_vel_xy = 0.5
+    w_ang_vel_z = 0.5
     w_joint_pos = 15.0
     w_joint_vel = 1.0e-3
-    w_contact = 5.0
+    w_contact = 1.0
+
+    # Mansin
+    # w_torso_pos = 0.0
+    # w_torso_orientation = 0.0
+    # w_lin_vel_xy = 0.0
+    # w_lin_vel_z = 0.0
+    # w_ang_vel_xy = 0.0
+    # w_ang_vel_z = 0.0
+    # w_joint_pos = 15.0
+    # w_joint_vel = 1.0e-3
+    # w_contact = 5.0
 
     #  TODO : double check if the slices are correct
     linear_vel_slice_start = 34

@@ -128,6 +128,12 @@ def reward_alive() -> jax.Array:
 # Pose-related rewards.
 
 
+def cost_head_vel(joints_qvel: jax.Array) -> jax.Array:
+    head_vel = joints_qvel[5:9]
+    head_vel_error = jp.sum(jp.square(head_vel))
+    return jp.nan_to_num(head_vel_error)
+
+
 def cost_head_pos(
     joints_qpos: jax.Array,
     joints_qvel: jax.Array,
