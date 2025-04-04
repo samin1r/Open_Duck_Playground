@@ -58,6 +58,7 @@ def default_config() -> config_dict.ConfigDict:
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
         max_motor_velocity=3.0,  # rad/s
+        obs_history_size=3,
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
@@ -299,7 +300,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 self._config.noise_config.action_max_delay * self._actuators
             ),
             "imu_history": jp.zeros(self._config.noise_config.imu_max_delay * 3),
-            "motor_obs_history": jp.zeros(self._config.noise_config.motor_obs_max_delay * self._actuators),
+            "joint_angle_history": jp.zeros(self._config.noise_config.motor_obs_max_delay * self._actuators),
+            "joint_vel_history": jp.zeros(self._config.noise_config.motor_obs_max_delay * self._actuators),
             # imitation related
             "imitation_i": 0,
             "current_reference_motion": current_reference_motion,
@@ -321,7 +323,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 for geom_id in self._feet_geom_id
             ]
         )
-        obs = self._get_obs(data, info, contact)
+        obs_history = jp.zeros(self._config.obs_history_size * 41)
+        obs = self._get_obs(data, obs_history, info, contact)
         reward, done = jp.zeros(2)
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
@@ -441,7 +444,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         p_fz = p_f[..., -1]
         state.info["swing_peak"] = jp.maximum(state.info["swing_peak"], p_fz)
 
-        obs = self._get_obs(data, state.info, contact)
+        obs = self._get_obs(data, state.obs, state.info, contact)
         done = self._get_termination(data)
 
         rewards = self._get_reward(
@@ -492,7 +495,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         return fall_termination | jp.isnan(data.qpos).any() | jp.isnan(data.qvel).any()
 
     def _get_obs(
-        self, data: mjx.Data, info: dict[str, Any], contact: jax.Array
+        self, data: mjx.Data, obs_history: jax.Array, info: dict[str, Any], contact: jax.Array
     ) -> mjx_env.Observation:
 
         gyro = self.get_gyro(data)
@@ -555,8 +558,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             * self._qpos_noise_scale
         )
 
-        joint_angles_history = jp.roll(info["motor_obs_history"], self._actuators).at[:self._actuators].set(noisy_joint_angles)
-        info["motor_obs_history"] = joint_angles_history
+        joint_angles_history = jp.roll(info["joint_angle_history"], self._actuators).at[:self._actuators].set(noisy_joint_angles)
+        info["joint_angle_history"] = joint_angles_history
         motor_obs_idx = jax.random.randint(
             noise_rng,
             (1,),
@@ -574,6 +577,17 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             * self._config.noise_config.level
             * self._config.noise_config.scales.joint_vel
         )
+
+        # Handle joint velocity delay
+        joint_vel_history = jp.roll(info["joint_vel_history"], self._actuators).at[:self._actuators].set(noisy_joint_vel)
+        info["joint_vel_history"] = joint_vel_history
+        joint_vel_idx = jax.random.randint(
+            noise_rng,
+            (1,),
+            minval=self._config.noise_config.motor_obs_min_delay,
+            maxval=self._config.noise_config.motor_obs_max_delay,
+        )
+        noisy_joint_vel = joint_vel_history.reshape((-1, self._actuators))[joint_vel_idx[0]]
 
         linvel = self.get_local_linvel(data)
         # info["rng"], noise_rng = jax.random.split(info["rng"])
@@ -593,17 +607,18 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 noisy_accelerometer,  # 3
                 info["command"],  # 3
                 noisy_joint_angles - self._default_actuator,  # 10
-                noisy_joint_vel * self._config.dof_vel_scale,  # 10
+                # noisy_joint_vel * self._config.dof_vel_scale,  # 10
                 info["last_act"],  # 10
-                info["last_last_act"],  # 10
-                info["last_last_last_act"],  # 10
-                info["motor_targets"],  # 10
+                # info["last_last_act"],  # 10
+                # info["last_last_last_act"],  # 10
+                # info["motor_targets"],  # 10
                 contact,  # 2
                 # info["current_reference_motion"],
                 # info["imitation_i"],
                 info["imitation_phase"],
             ]
         )
+        state = jp.roll(obs_history, state.size).at[: state.size].set(state)
 
         accelerometer = self.get_accelerometer(data)
         global_angvel = self.get_global_angvel(data)
