@@ -53,17 +53,19 @@ def default_config() -> config_dict.ConfigDict:
         sim_dt=0.002,
         episode_length=1000,
         action_repeat=1,
-        action_scale=0.3,
+        action_scale=0.25,
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
-        max_motor_velocity=5.24,  # rad/s
+        max_motor_velocity=3.0,  # rad/s
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
             action_min_delay=0,  # env steps
-            action_max_delay=2,  # env steps
+            action_max_delay=4,  # env steps
             imu_min_delay=0,  # env steps
-            imu_max_delay=2,  # env steps
+            imu_max_delay=4,  # env steps
+            motor_obs_min_delay=0,  # env steps
+            motor_obs_max_delay=4,  # env steps
             scales=config_dict.create(
                 hip_pos=0.03,  # rad, for each hip joint
                 knee_pos=0.05,  # rad, for each knee joint
@@ -297,6 +299,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 self._config.noise_config.action_max_delay * self._actuators
             ),
             "imu_history": jp.zeros(self._config.noise_config.imu_max_delay * 3),
+            "motor_obs_history": jp.zeros(self._config.noise_config.motor_obs_max_delay * self._actuators),
             # imitation related
             "imitation_i": 0,
             "current_reference_motion": current_reference_motion,
@@ -551,6 +554,16 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             * self._config.noise_config.level
             * self._qpos_noise_scale
         )
+
+        joint_angles_history = jp.roll(info["motor_obs_history"], self._actuators).at[:self._actuators].set(noisy_joint_angles)
+        info["motor_obs_history"] = joint_angles_history
+        motor_obs_idx = jax.random.randint(
+            noise_rng,
+            (1,),
+            minval=self._config.noise_config.motor_obs_min_delay,
+            maxval=self._config.noise_config.motor_obs_max_delay,
+        )
+        noisy_joint_angles = joint_angles_history.reshape((-1, self._actuators))[motor_obs_idx[0]]
 
         # joint_vel = data.qvel[6:]
         joint_vel = self.get_actuator_joints_qvel(data.qvel)
