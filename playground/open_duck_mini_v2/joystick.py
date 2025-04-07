@@ -420,7 +420,10 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 + self._config.max_motor_velocity * self.dt,  # control dt
             )
 
-        # motor_targets.at[5:9].set(state.info["command"][3:])  # head joints
+        # we mix manual control with policy ?
+        head_motor_targets = state.info["command"][3:] + self.motor_targets[5:9]
+        motor_targets.at[5:9].set(head_motor_targets)  # head joints
+
         data = mjx_env.step(self.mjx_model, state.data, motor_targets, self.n_substeps)
 
         state.info["motor_targets"] = motor_targets
