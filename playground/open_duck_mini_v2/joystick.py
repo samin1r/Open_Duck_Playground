@@ -39,7 +39,7 @@ from playground.common.rewards import (
     cost_stand_still,
     reward_alive,
     # cost_head_vel,
-    cost_head_pos
+    # cost_head_pos
 )
 from playground.open_duck_mini_v2.custom_rewards import reward_imitation
 
@@ -86,7 +86,7 @@ def default_config() -> config_dict.ConfigDict:
                 alive=20.0,
                 imitation=1.0,
                 # head_vel=-0.05,
-                head_pos=-0.5
+                # head_pos=-0.5
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -671,11 +671,11 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             # "head_vel": cost_head_vel(
             #     self.get_actuator_joints_qvel(data.qvel),
             # ),
-            "head_pos": cost_head_pos(
-                self.get_actuator_joints_qpos(data.qpos),
-                self.get_actuator_joints_qvel(data.qvel),
-                info["command"],
-            ),
+            # "head_pos": cost_head_pos(
+            #     self.get_actuator_joints_qpos(data.qpos),
+            #     self.get_actuator_joints_qvel(data.qvel),
+            #     info["command"],
+            # ),
         }
 
         return ret
