@@ -150,7 +150,7 @@ def cost_head_pos(
 
     # head_vel_error = jp.sum(jp.square(head_vel - target_head_qvel))
 
-    return jp.nan_to_num(head_pos_error) * (move_cmd_norm > 0.01)
+    return jp.nan_to_num(head_pos_error) * (move_cmd_norm < 0.01)
     # return jp.nan_to_num(head_pos_error + head_vel_error)
 
 
