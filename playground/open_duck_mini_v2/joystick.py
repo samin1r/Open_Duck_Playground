@@ -420,9 +420,9 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 + self._config.max_motor_velocity * self.dt,  # control dt
             )
 
-        # we mix manual control with policy ?
-        head_motor_targets = state.info["command"][3:] + motor_targets[5:9]
-        motor_targets.at[5:9].set(head_motor_targets)  # head joints
+        # trying mix manual head control with policy ?
+        # head_motor_targets = state.info["command"][3:] + motor_targets[5:9]
+        # motor_targets.at[5:9].set(head_motor_targets)  # head joints
 
         data = mjx_env.step(self.mjx_model, state.data, motor_targets, self.n_substeps)
 
@@ -651,7 +651,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             ),
             # "orientation": cost_orientation(self.get_gravity(data)),
             "torques": cost_torques(data.actuator_force),
-            "action_rate": cost_action_rate(action, info["last_act"]),
+            "action_rate": cost_action_rate(action, info["last_act"], ignore_ankles=True),
             "alive": reward_alive(),
             "imitation": reward_imitation(  # FIXME, this reward is so adhoc...
                 self.get_floating_base_qpos(data.qpos),  # floating base qpos

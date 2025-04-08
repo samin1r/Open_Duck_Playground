@@ -74,7 +74,18 @@ def cost_energy(qvel: jax.Array, qfrc_actuator: jax.Array) -> jax.Array:
     return jp.nan_to_num(jp.sum(jp.abs(qvel) * jp.abs(qfrc_actuator)))
 
 
-def cost_action_rate(act: jax.Array, last_act: jax.Array) -> jax.Array:
+def cost_action_rate(
+    act: jax.Array, last_act: jax.Array, ignore_ankles: bool = False
+) -> jax.Array:
+    # act = act.copy()  
+    # ref_joint_pos = jp.concatenate([ref_joint_pos[:5], ref_joint_pos[11:]])
+
+    if ignore_ankles:
+        act = act.at[4].set(0.0)
+        act = act.at[13].set(0.0)
+        last_act = last_act.at[4].set(0.0)
+        last_act = last_act.at[13].set(0.0)
+
     c1 = jp.nan_to_num(jp.sum(jp.square(act - last_act)))
     return c1
 
