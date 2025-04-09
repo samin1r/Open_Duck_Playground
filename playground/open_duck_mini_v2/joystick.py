@@ -57,7 +57,7 @@ def default_config() -> config_dict.ConfigDict:
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
-        max_motor_velocity=3.0,  # rad/s
+        max_motor_velocity=4.8,  # rad/s
         obs_history_size=3,
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
