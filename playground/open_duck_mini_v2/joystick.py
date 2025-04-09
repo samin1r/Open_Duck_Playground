@@ -61,12 +61,12 @@ def default_config() -> config_dict.ConfigDict:
         obs_history_size=3,
         noise_config=config_dict.create(
             level=1.0,  # Set to 0.0 to disable noise.
-            action_min_delay=0,  # env steps
-            action_max_delay=4,  # env steps
-            imu_min_delay=0,  # env steps
-            imu_max_delay=4,  # env steps
-            motor_obs_min_delay=0,  # env steps
-            motor_obs_max_delay=4,  # env steps
+            action_min_delay=1,  # env steps
+            action_max_delay=3,  # env steps
+            imu_min_delay=1,  # env steps
+            imu_max_delay=3,  # env steps
+            motor_obs_min_delay=1,  # env steps
+            motor_obs_max_delay=3,  # env steps
             scales=config_dict.create(
                 hip_pos=0.03,  # rad, for each hip joint
                 knee_pos=0.05,  # rad, for each knee joint
@@ -323,7 +323,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 for geom_id in self._feet_geom_id
             ]
         )
-        obs_history = jp.zeros(self._config.obs_history_size * 41)
+        obs_history = jp.zeros(self._config.obs_history_size * 45)
         obs = self._get_obs(data, obs_history, info, contact)
         reward, done = jp.zeros(2)
         return mjx_env.State(data, obs, reward, done, metrics, info)
@@ -444,7 +444,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         p_fz = p_f[..., -1]
         state.info["swing_peak"] = jp.maximum(state.info["swing_peak"], p_fz)
 
-        obs = self._get_obs(data, state.obs, state.info, contact)
+        obs = self._get_obs(data, state.obs["state"], state.info, contact)
         done = self._get_termination(data)
 
         rewards = self._get_reward(
@@ -605,7 +605,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 # noisy_gravity,  # 3
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
-                info["command"],  # 3
+                info["command"],  # 7
                 noisy_joint_angles - self._default_actuator,  # 10
                 # noisy_joint_vel * self._config.dof_vel_scale,  # 10
                 info["last_act"],  # 10

@@ -34,6 +34,9 @@ class MjInfer:
         self.dof_pos_scale = 1.0
         self.dof_vel_scale = 0.05
         self.action_scale = 0.25
+        self.obs_history_length = 3
+
+        self.obs_history = np.zeros(self.obs_history_length*45)
 
         self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
@@ -359,11 +362,11 @@ class MjInfer:
                 # gravity,
                 command,
                 joint_angles - self.default_actuator,
-                joint_vel * self.dof_vel_scale,
+                # joint_vel * self.dof_vel_scale,
                 self.last_action,
-                self.last_last_action,
-                self.last_last_last_action,
-                self.motor_targets,
+                # self.last_last_action,
+                # self.last_last_last_action,
+                # self.motor_targets,
                 contacts,
                 # ref if not self.standing else np.array([]),
                 # [self.imitation_i]
@@ -472,6 +475,11 @@ class MjInfer:
                             self.data,
                             self.commands,
                         )
+
+                        self.obs_history = np.roll(self.obs_history, 45)
+                        self.obs_history[:45] = obs
+                        obs = self.obs_history
+
                         self.saved_obs.append(obs)
                         action = self.policy.infer(obs)
 
