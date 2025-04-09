@@ -199,7 +199,7 @@
                 <!-- Link foot_assembly -->
                 <body name="foot_assembly" pos="1.8735e-16 -0.07865 0.0001" quat="1 2.77556e-16 5.55112e-16 1.52656e-16">
                   <!-- Joint from knee_and_ankle_assembly_2 to foot_assembly -->
-                  <joint name="left_ankle" type="hinge" range="-1.5707963267948957 1.5707963267948974" class="sts3215_low_kp"/>
+                  <joint name="left_ankle" type="hinge" range="-1.5707963267948957 1.5707963267948974" class="sts3215"/>
                   <joint name="left_ankle_backlash" pos="0 0 0" axis="0 0 1" class="backlash"/>
                   <inertial pos="0.0110718 -0.0246608 0.0190626" mass="0.07524"
                     fullinertia="1.87482e-05 6.74427e-05 6.061e-05 1.58839e-06 -6.52354e-09 5.67391e-08"/>
@@ -409,7 +409,7 @@
                 <body name="foot_assembly_2" pos="1.32533e-15 -0.07865 0.0001"
                   quat="1 3.88578e-16 -3.33067e-16 5.55111e-16">
                   <!-- Joint from knee_and_ankle_assembly_4 to foot_assembly_2 -->
-                  <joint name="right_ankle" type="hinge" range="-1.5707963267948957 1.5707963267948974" class="sts3215_low_kp"/>
+                  <joint name="right_ankle" type="hinge" range="-1.5707963267948957 1.5707963267948974" class="sts3215"/>
                   <joint name="right_ankle_backlash" pos="0 0 0" axis="0 0 1" class="backlash"/>
                   <inertial pos="0.0110718 -0.0246608 0.0190626" mass="0.07524"
                     fullinertia="1.87482e-05 6.74427e-05 6.061e-05 1.58839e-06 -6.52354e-09 5.67391e-08"/>
@@ -502,7 +502,7 @@
     <position class="sts3215" name="left_hip_roll" joint="left_hip_roll" inheritrange="1"/>
     <position class="sts3215" name="left_hip_pitch" joint="left_hip_pitch" inheritrange="1"/>
     <position class="sts3215" name="left_knee" joint="left_knee" inheritrange="1"/>
-    <position class="sts3215_low_kp" name="left_ankle" joint="left_ankle" inheritrange="1"/>
+    <position class="sts3215" name="left_ankle" joint="left_ankle" inheritrange="1"/>
     <position class="sts3215" name="neck_pitch" joint="neck_pitch" inheritrange="1"/>
     <position class="sts3215" name="head_pitch" joint="head_pitch" inheritrange="1"/>
     <position class="sts3215" name="head_yaw" joint="head_yaw" inheritrange="1"/>
@@ -511,7 +511,7 @@
     <position class="sts3215" name="right_hip_roll" joint="right_hip_roll" inheritrange="1"/>
     <position class="sts3215" name="right_hip_pitch" joint="right_hip_pitch" inheritrange="1"/>
     <position class="sts3215" name="right_knee" joint="right_knee" inheritrange="1"/>
-    <position class="sts3215_low_kp" name="right_ankle" joint="right_ankle" inheritrange="1"/>
+    <position class="sts3215" name="right_ankle" joint="right_ankle" inheritrange="1"/>
   </actuator>
   <equality/>
 </mujoco>
