@@ -39,8 +39,8 @@ parser = argparse.ArgumentParser(description="Reference Motion Viewer")
 parser.add_argument(
     "--reference_data",
     type=str,
-    default="playground/go_bdx/data/polynomial_coefficients.pkl",
-    help="Path to the polynomial coefficients pickle file.",
+    default="playground/open_duck_mini_v2/data/animation_data_leg_flexing.json",
+    help="Path to the reference animation un json format.",
 )
 parser.add_argument(
     "-joystick", action="store_true", default=False, help="Use joystick control"
@@ -98,7 +98,7 @@ mujoco.mj_step(model, data)
 
 # Load the polynomial reference motion.
 ERM = EpisodicReferenceMotion(
-    "/home/simsim/Documents/blender_projects/duck_mini/json/animation_data_check_pos_orientation.json"
+    args.reference_data,
 )  # Load the episodic reference motion.
 
 # Get the "home" keyframe to use as a default pose.

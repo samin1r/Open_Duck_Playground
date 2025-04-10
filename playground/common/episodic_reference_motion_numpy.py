@@ -23,8 +23,6 @@ class EpisodicReferenceMotion:
     def get_frame(self, i):
         # outputs [joints_pos, joints_vel, foot_contacts, base_linear_vel, base_angular_vel],
 
-        joints_pos = self.ref_motion["Frames"][i][7 : 7 + 16]
-
         frame = []
         frame += self.ref_motion["Frames"][i][7 : 7 + 16]  # joints pos
         frame += self.ref_motion["Frames"][i][35 : 35 + 16]  # joints vel
@@ -35,8 +33,8 @@ class EpisodicReferenceMotion:
         return frame
 
 
-if __name__ == "__main__":
-    ERM = EpisodicReferenceMotion("/home/antoine/Téléchargements/animation_data.json")
-    for i in range(ERM.nb_steps):
-        frame = ERM.get_frame(i)
-        exit()
+# if __name__ == "__main__":
+#     ERM = EpisodicReferenceMotion("/home/antoine/Téléchargements/animation_data.json")
+#     for i in range(ERM.nb_steps):
+#         frame = ERM.get_frame(i)
+#         exit()
