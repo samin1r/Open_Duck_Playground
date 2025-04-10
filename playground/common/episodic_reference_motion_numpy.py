@@ -33,8 +33,8 @@ class EpisodicReferenceMotion:
         return frame
 
 
-# if __name__ == "__main__":
-#     ERM = EpisodicReferenceMotion("/home/antoine/Téléchargements/animation_data.json")
-#     for i in range(ERM.nb_steps):
-#         frame = ERM.get_frame(i)
-#         exit()
+if __name__ == "__main__":
+    ERM = EpisodicReferenceMotion("/home/antoine/Téléchargements/animation_data.json")
+    for i in range(ERM.nb_steps):
+        frame = ERM.get_frame(i)
+        exit()

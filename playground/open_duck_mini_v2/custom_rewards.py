@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as jp
 
-
 def reward_imitation(
     base_qpos: jax.Array,
     base_qvel: jax.Array,
@@ -11,8 +10,8 @@ def reward_imitation(
     reference_frame: jax.Array,
     cmd: jax.Array,
     use_imitation_reward: bool = False,
-    ignore_head: bool = True,
-    episodic: bool = False,
+    ignore_head:bool=True,
+    episodic:bool=False
 ) -> jax.Array:
     if not use_imitation_reward:
         return jp.nan_to_num(0.0)
@@ -30,7 +29,7 @@ def reward_imitation(
     w_joint_vel = 1.0e-3
     w_contact = 1.0
 
-    # Mansin
+    # Mansin
     # w_torso_pos = 0.0
     # w_torso_orientation = 0.0
     # w_lin_vel_xy = 0.0
@@ -56,6 +55,8 @@ def reward_imitation(
 
     angular_vel_slice_start = 37
     angular_vel_slice_end = 40
+
+
 
     # root_pos_slice_start = 0
     # root_pos_slice_end = 3
@@ -95,8 +96,6 @@ def reward_imitation(
         ref_joint_pos = jp.concatenate([ref_joint_pos[:5], ref_joint_pos[11:]])
         joint_pos = jp.concatenate([joints_qpos[:5], joints_qpos[9:]])
     else:
-        # remove only antennas
-        ref_joint_pos = jp.concatenate([ref_joint_pos[:9], ref_joint_pos[11:]])
         joint_pos = joints_qpos
 
     ref_joint_vels = reference_frame[joint_vels_slice_start:joint_vels_slice_end]
@@ -105,8 +104,6 @@ def reward_imitation(
         ref_joint_vels = jp.concatenate([ref_joint_vels[:5], ref_joint_vels[11:]])
         joint_vel = jp.concatenate([joints_qvel[:5], joints_qvel[9:]])
     else:
-        # remove only antennas
-        ref_joint_vels = jp.concatenate([ref_joint_vels[:9], ref_joint_vels[11:]])
         joint_vel = joints_qvel
 
     # ref_left_toe_pos = reference_frame[left_toe_pos_slice_start:left_toe_pos_slice_end]

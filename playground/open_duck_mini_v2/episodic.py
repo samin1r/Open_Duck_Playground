@@ -80,7 +80,7 @@ def default_config() -> config_dict.ConfigDict:
                 action_rate=-0.5,  # was -1.5
                 # stand_still=-0.2,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
-                imitation=5.0,
+                imitation=1.0,
                 # head_vel=-0.05,
                 # head_pos=-0.5
             ),
@@ -635,8 +635,6 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["current_reference_motion"],
                 info["command"],
                 USE_IMITATION_REWARD,
-                ignore_head=False,
-                episodic=True
             ),
         }
 
