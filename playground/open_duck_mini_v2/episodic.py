@@ -635,6 +635,7 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["current_reference_motion"],
                 info["command"],
                 USE_IMITATION_REWARD,
+                episodic=True
             ),
         }
 
