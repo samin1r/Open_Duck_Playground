@@ -1,3 +1,4 @@
+import jax.numpy as jp
 import json
 
 # contains only one reference motion
@@ -6,6 +7,7 @@ import json
 class EpisodicReferenceMotion:
     def __init__(self, ref_motion_path: str):
         self.ref_motion = json.load(open(ref_motion_path, "r"))
+        self.frames = jp.array(self.ref_motion["Frames"])
         self.nb_steps = len(self.ref_motion["Frames"])
 
     # ref_motion["Frames"][i]:
@@ -21,17 +23,22 @@ class EpisodicReferenceMotion:
     # + right_toe_vel
     # + foot_contacts
     def get_frame(self, i):
-        # outputs [joints_pos, joints_vel, foot_contacts, base_linear_vel, base_angular_vel],
+        # outputs [joints_pos, joints_vel, foot_contacts, world_linear_vel, world_angular_vel],
 
-        joints_pos = self.ref_motion["Frames"][i][7 : 7 + 16]
-
-        frame = []
-        frame += self.ref_motion["Frames"][i][7 : 7 + 16]  # joints pos
-        frame += self.ref_motion["Frames"][i][35 : 35 + 16]  # joints vel
-        frame += self.ref_motion["Frames"][i][-2:]  # foot contacts
-        frame += self.ref_motion["Frames"][i][
+        joints_pos = self.frames[i][7 : 7 + 16]  # joints pos
+        joints_vel = self.frames[i][35 : 35 + 16]  # joints vel
+        foot_contacts = self.frames[i][-2:]  # foot contacts
+        world_lin_vel_ang_vel = self.frames[i][
             29 : 29 + 6
-        ]  # base linear vel + base angular vel
+        ]  # world linear vel + world angular vel
+        frame = jp.concatenate(
+            [
+                joints_pos,
+                joints_vel,
+                foot_contacts,
+                world_lin_vel_ang_vel,
+            ]
+        )
         return frame
 
 

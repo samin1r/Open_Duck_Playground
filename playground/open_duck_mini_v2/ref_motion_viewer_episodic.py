@@ -1,5 +1,6 @@
 import mujoco
 import numpy as np
+np.set_printoptions(legacy='1.25')
 import time
 import argparse
 import os, sys
@@ -97,7 +98,7 @@ mujoco.mj_step(model, data)
 
 # Load the polynomial reference motion.
 ERM = EpisodicReferenceMotion(
-    "/home/antoine/Téléchargements/animation_data_new.json"
+    "/home/simsim/Documents/blender_projects/duck_mini/json/animation_data_check_pos_orientation.json"
 )  # Load the episodic reference motion.
 
 # Get the "home" keyframe to use as a default pose.
@@ -171,23 +172,46 @@ with mujoco.viewer.launch_passive(
     dt = model.opt.timestep
     counter = 0
     new_qpos = default_qpos.copy()
+    prev_qpos = data.qpos.copy()
+
     while viewer.is_running():
         step_start = time.time()
         handle_joystick()
         counter += 1
         new_qpos[:7] = default_qpos[:7].copy()
+        new_qvel = np.zeros(6)
         if counter % decimation == 0:
             new_qpos = default_qpos.copy()
-            if not all(val == 0.0 for val in command):
+            if True or not all(val == 0.0 for val in command):
                 imitation_i = step % ERM.nb_steps
 
                 ref_motion = ERM.get_frame(imitation_i)
 
                 ref_motion = np.array(ref_motion)
+                new_qvel = ref_motion[34:34+6]
 
                 if ref_motion.shape[0] == 40:
                     joints_pos = ref_motion[0:16]
                     ref_joint_pos = np.concatenate([joints_pos[:9], joints_pos[11:]])
+                    # ref_joint_pos = joints_pos
+
+                    ref_joint_vel = ref_motion[16:32]
+                    ref_joint_vel = np.concatenate([ref_joint_vel[:9], ref_joint_vel[11:]])
+                    print(f"ref_joint_vel:" , list(np.around(ref_joint_vel, 3)))
+
+                    qpos = data.qpos.copy()
+                    qpos[7:7+5] = -data.qpos[7:7+5]
+                    qpos[16] = -data.qpos[16]
+                    qpos[19] = -data.qpos[19]
+                    qpos[20] = -data.qpos[20]
+
+                    # Compute qvel manually
+                    qvel = (qpos[7:7+14] - prev_qpos[7:7+14]) / (dt * decimation)
+                    print("our_joint_vel:" , list(np.around(qvel, 3)))
+
+                    print(f"muj joint_vel: {list(np.around(list(data.qvel[6:6+14]), 3))}")
+                    print("Dif_joint_vel:", list(np.around(ref_joint_vel - qvel, 3)))
+                    print("------------------------")
                 else:
                     print(
                         "Error: Unexpected reference motion dimension:",
@@ -197,7 +221,7 @@ with mujoco.viewer.launch_passive(
                 new_qpos = default_qpos.copy()
                 if new_qpos[7 : 7 + 14].shape[0] == ref_joint_pos.shape[0]:
                     new_qpos[7] = -ref_joint_pos[0]
-                    new_qpos[8] = -ref_joint_pos[1]
+                    new_qpos[8] = ref_joint_pos[1]
                     new_qpos[9] = -ref_joint_pos[2]
                     new_qpos[10] = -ref_joint_pos[3]
                     new_qpos[11] = -ref_joint_pos[4]
@@ -208,10 +232,10 @@ with mujoco.viewer.launch_passive(
                     new_qpos[15] = ref_joint_pos[8]
 
                     new_qpos[16] = -ref_joint_pos[9]
-                    new_qpos[17] = -ref_joint_pos[10]
-                    new_qpos[18] = -ref_joint_pos[11]
-                    new_qpos[19] = ref_joint_pos[12]
-                    new_qpos[20] = ref_joint_pos[13]
+                    new_qpos[17] = ref_joint_pos[10]
+                    new_qpos[18] = ref_joint_pos[11]
+                    new_qpos[19] = -ref_joint_pos[12]
+                    new_qpos[20] = -ref_joint_pos[13]
 
 
                     # new_qpos[7 : 7 + 14] = -ref_joint_pos
@@ -219,10 +243,20 @@ with mujoco.viewer.launch_passive(
                     print(
                         "Error: Actuated joint dimension mismatch. Using default pose."
                     )
+                    print(f"len default_qpos: {len(default_qpos)}")
                 step += 1
             else:
                 step = 0
-        data.qpos[:] = new_qpos
+            prev_qpos = data.qpos.copy()
+            prev_qpos[7:7+5] = -prev_qpos[7:7+5]
+            prev_qpos[16] = -prev_qpos[16]
+            prev_qpos[19] = -prev_qpos[19]
+            prev_qpos[20] = -prev_qpos[20]
+
+            data.ctrl = new_qpos[7:7 + 14]  
+        
+        data.qvel[:6] = new_qvel
+        # data.qpos[:7] = new_qpos[:7]
 
         # Step the simulation to update any dependent quantities.
         mujoco.mj_step(model, data)

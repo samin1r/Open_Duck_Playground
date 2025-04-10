@@ -39,23 +39,28 @@ def reward_imitation(
     # w_contact = 5.0
 
     #  TODO : double check if the slices are correct
-    linear_vel_slice_start = 34
-    linear_vel_slice_end = 37
-
-    angular_vel_slice_start = 37
-    angular_vel_slice_end = 40
-
     joint_pos_slice_start = 0
     joint_pos_slice_end = 16
 
     joint_vels_slice_start = 16
     joint_vels_slice_end = 32
 
+    foot_contacts_slice_start = 32
+    foot_contacts_slice_end = 34
+
+    linear_vel_slice_start = 34
+    linear_vel_slice_end = 37
+
+    angular_vel_slice_start = 37
+    angular_vel_slice_end = 40
+
+
+
     # root_pos_slice_start = 0
     # root_pos_slice_end = 3
 
-    root_quat_slice_start = 3
-    root_quat_slice_end = 7
+    # root_quat_slice_start = 3
+    # root_quat_slice_end = 7
 
     # left_toe_pos_slice_start = 23
     # left_toe_pos_slice_end = 26
@@ -63,22 +68,19 @@ def reward_imitation(
     # right_toe_pos_slice_start = 26
     # right_toe_pos_slice_end = 29
 
-    foot_contacts_slice_start = 32
-    foot_contacts_slice_end = 34
-
     # ref_base_pos = reference_frame[root_pos_slice_start:root_pos_slice_end]
     # base_pos = qpos[:3]
 
-    ref_base_orientation_quat = reference_frame[
-        root_quat_slice_start:root_quat_slice_end
-    ]
-    ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
-        ref_base_orientation_quat
-    )  # normalize the quat
-    base_orientation = base_qpos[3:7]
-    base_orientation = base_orientation / jp.linalg.norm(
-        base_orientation
-    )  # normalize the quat
+    # ref_base_orientation_quat = reference_frame[
+    #     root_quat_slice_start:root_quat_slice_end
+    # ]
+    # ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
+    #     ref_base_orientation_quat
+    # )  # normalize the quat
+    # base_orientation = base_qpos[3:7]
+    # base_orientation = base_orientation / jp.linalg.norm(
+    #     base_orientation
+    # )  # normalize the quat
 
     ref_base_lin_vel = reference_frame[linear_vel_slice_start:linear_vel_slice_end]
     base_lin_vel = base_qvel[:3]
@@ -111,11 +113,11 @@ def reward_imitation(
     # real quaternion angle doesn't have the expected  effect, switching back for now
     # torso_orientation_rew = jp.exp(-20 * self.quaternion_angle(base_orientation, ref_base_orientation_quat)) * w_torso_orientation
 
-    # TODO ignore yaw here, we just want xy orientation
-    torso_orientation_rew = (
-        jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
-        * w_torso_orientation
-    )
+    # # TODO ignore yaw here, we just want xy orientation
+    # torso_orientation_rew = (
+    #     jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
+    #     * w_torso_orientation
+    # )
 
     lin_vel_xy_rew = (
         jp.exp(-8.0 * jp.sum(jp.square(base_lin_vel[:2] - ref_base_lin_vel[:2])))
