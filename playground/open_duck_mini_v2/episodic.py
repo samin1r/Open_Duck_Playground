@@ -80,7 +80,7 @@ def default_config() -> config_dict.ConfigDict:
                 action_rate=-0.5,  # was -1.5
                 # stand_still=-0.2,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
-                imitation=1.0,
+                imitation=5.0,
                 # head_vel=-0.05,
                 # head_pos=-0.5
             ),
@@ -623,7 +623,7 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             # "orientation": cost_orientation(self.get_gravity(data)),
             "torques": cost_torques(data.actuator_force),
             "action_rate": cost_action_rate(
-                action, info["last_act"], ignore_ankles=True
+                action, info["last_act"]
             ),
             "alive": reward_alive(),
             "imitation": reward_imitation(  # FIXME, this reward is so adhoc...
@@ -679,9 +679,8 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             maxval=self._config.head_roll_range[1] * self._config.head_range_factor,
         )
 
-        # With 10% chance, set everything to zero.
         return jp.where(
-            jax.random.bernoulli(rng4, p=0.1),
+            jax.random.bernoulli(rng4, p=1.0),
             jp.zeros(7),
             jp.hstack(
                 [
