@@ -80,7 +80,7 @@ def default_config() -> config_dict.ConfigDict:
                 action_rate=-0.5,  # was -1.5
                 # stand_still=-0.2,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
-                imitation=1.0,
+                imitation=10.0,
                 # head_vel=-0.05,
                 # head_pos=-0.5
             ),
