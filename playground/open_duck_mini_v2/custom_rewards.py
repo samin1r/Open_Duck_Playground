@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jp
 
+
 def reward_imitation(
     base_qpos: jax.Array,
     base_qvel: jax.Array,
@@ -10,7 +11,8 @@ def reward_imitation(
     reference_frame: jax.Array,
     cmd: jax.Array,
     use_imitation_reward: bool = False,
-    ignore_head: bool=True
+    ignore_head: bool = True,
+    episodic: bool = False,
 ) -> jax.Array:
     if not use_imitation_reward:
         return jp.nan_to_num(0.0)
@@ -28,7 +30,7 @@ def reward_imitation(
     w_joint_vel = 1.0e-3
     w_contact = 1.0
 
-    # Mansin
+    # Mansin
     # w_torso_pos = 0.0
     # w_torso_orientation = 0.0
     # w_lin_vel_xy = 0.0
@@ -54,8 +56,6 @@ def reward_imitation(
 
     angular_vel_slice_start = 37
     angular_vel_slice_end = 40
-
-
 
     # root_pos_slice_start = 0
     # root_pos_slice_end = 3
@@ -167,5 +167,6 @@ def reward_imitation(
         # + torso_orientation_rew
     )
 
-    reward *= cmd_norm > 0.01  # No reward for zero commands.
+    if not episodic:
+        reward *= cmd_norm > 0.01  # No reward for zero commands.
     return jp.nan_to_num(reward)
