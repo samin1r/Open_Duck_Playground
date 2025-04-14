@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jp
 
+
 def reward_imitation(
     base_qpos: jax.Array,
     base_qvel: jax.Array,
@@ -11,7 +12,7 @@ def reward_imitation(
     cmd: jax.Array,
     use_imitation_reward: bool = False,
     ignore_head: bool = True,
-    episodic: bool = False
+    episodic: bool = False,
 ) -> jax.Array:
     if not use_imitation_reward:
         return jp.nan_to_num(0.0)
@@ -29,7 +30,7 @@ def reward_imitation(
     w_joint_vel = 1.0e-3
     w_contact = 1.0
 
-    # Mansin
+    # Mansin
     # w_torso_pos = 0.0
     # w_torso_orientation = 0.0
     # w_lin_vel_xy = 0.0
@@ -41,28 +42,23 @@ def reward_imitation(
     # w_contact = 5.0
 
     #  TODO : double check if the slices are correct
-    joint_pos_slice_start = 0
-    joint_pos_slice_end = 16
-
-    joint_vels_slice_start = 16
-    joint_vels_slice_end = 32
-
-    foot_contacts_slice_start = 32
-    foot_contacts_slice_end = 34
-
     linear_vel_slice_start = 34
     linear_vel_slice_end = 37
 
     angular_vel_slice_start = 37
     angular_vel_slice_end = 40
 
+    joint_pos_slice_start = 0
+    joint_pos_slice_end = 16
 
+    joint_vels_slice_start = 16
+    joint_vels_slice_end = 32
 
     # root_pos_slice_start = 0
     # root_pos_slice_end = 3
 
-    # root_quat_slice_start = 3
-    # root_quat_slice_end = 7
+    root_quat_slice_start = 3
+    root_quat_slice_end = 7
 
     # left_toe_pos_slice_start = 23
     # left_toe_pos_slice_end = 26
@@ -70,19 +66,22 @@ def reward_imitation(
     # right_toe_pos_slice_start = 26
     # right_toe_pos_slice_end = 29
 
+    foot_contacts_slice_start = 32
+    foot_contacts_slice_end = 34
+
     # ref_base_pos = reference_frame[root_pos_slice_start:root_pos_slice_end]
     # base_pos = qpos[:3]
 
-    # ref_base_orientation_quat = reference_frame[
-    #     root_quat_slice_start:root_quat_slice_end
-    # ]
-    # ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
-    #     ref_base_orientation_quat
-    # )  # normalize the quat
-    # base_orientation = base_qpos[3:7]
-    # base_orientation = base_orientation / jp.linalg.norm(
-    #     base_orientation
-    # )  # normalize the quat
+    ref_base_orientation_quat = reference_frame[
+        root_quat_slice_start:root_quat_slice_end
+    ]
+    ref_base_orientation_quat = ref_base_orientation_quat / jp.linalg.norm(
+        ref_base_orientation_quat
+    )  # normalize the quat
+    base_orientation = base_qpos[3:7]
+    base_orientation = base_orientation / jp.linalg.norm(
+        base_orientation
+    )  # normalize the quat
 
     ref_base_lin_vel = reference_frame[linear_vel_slice_start:linear_vel_slice_end]
     base_lin_vel = base_qvel[:3]
@@ -91,24 +90,24 @@ def reward_imitation(
     base_ang_vel = base_qvel[3:6]
 
     ref_joint_pos = reference_frame[joint_pos_slice_start:joint_pos_slice_end]
-    # if ignore_head:
-    #     # remove neck head and antennas
-    ref_joint_pos = jp.concatenate([ref_joint_pos[:5], ref_joint_pos[11:]])
-    joint_pos = jp.concatenate([joints_qpos[:5], joints_qpos[9:]])
-    # else:
-    #     # remove only antennas
-    #     ref_joint_pos = jp.concatenate([ref_joint_pos[:9], ref_joint_pos[11:]])
-    #     joint_pos = joints_qpos
+    if ignore_head:
+        # remove neck head and antennas
+        ref_joint_pos = jp.concatenate([ref_joint_pos[:5], ref_joint_pos[11:]])
+        joint_pos = jp.concatenate([joints_qpos[:5], joints_qpos[9:]])
+    else:
+        # just remove antennas
+        ref_joint_pos = jp.concatenate([ref_joint_pos[:9], ref_joint_pos[11:]])
+        joint_pos = joints_qpos
 
     ref_joint_vels = reference_frame[joint_vels_slice_start:joint_vels_slice_end]
-    # if ignore_head:
+    if ignore_head:
         # remove neck head and antennas
-    ref_joint_vels = jp.concatenate([ref_joint_vels[:5], ref_joint_vels[11:]])
-    joint_vel = jp.concatenate([joints_qvel[:5], joints_qvel[9:]])
-    # else:
-    #     # remove only antennas
-    #     ref_joint_vels = jp.concatenate([ref_joint_vels[:9], ref_joint_vels[11:]])
-    #     joint_vel = joints_qvel
+        ref_joint_vels = jp.concatenate([ref_joint_vels[:5], ref_joint_vels[11:]])
+        joint_vel = jp.concatenate([joints_qvel[:5], joints_qvel[9:]])
+    else:
+        # just remove antennas
+        ref_joint_vels = jp.concatenate([ref_joint_vels[:9], ref_joint_vels[11:]])
+        joint_vel = joints_qvel
 
     # ref_left_toe_pos = reference_frame[left_toe_pos_slice_start:left_toe_pos_slice_end]
     # ref_right_toe_pos = reference_frame[right_toe_pos_slice_start:right_toe_pos_slice_end]
@@ -123,11 +122,11 @@ def reward_imitation(
     # real quaternion angle doesn't have the expected  effect, switching back for now
     # torso_orientation_rew = jp.exp(-20 * self.quaternion_angle(base_orientation, ref_base_orientation_quat)) * w_torso_orientation
 
-    # # TODO ignore yaw here, we just want xy orientation
-    # torso_orientation_rew = (
-    #     jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
-    #     * w_torso_orientation
-    # )
+    # TODO ignore yaw here, we just want xy orientation
+    torso_orientation_rew = (
+        jp.exp(-20.0 * jp.sum(jp.square(base_orientation - ref_base_orientation_quat)))
+        * w_torso_orientation
+    )
 
     lin_vel_xy_rew = (
         jp.exp(-8.0 * jp.sum(jp.square(base_lin_vel[:2] - ref_base_lin_vel[:2])))
@@ -165,9 +164,9 @@ def reward_imitation(
         + joint_pos_rew
         + joint_vel_rew
         + contact_rew
-        # + torso_orientation_rew
     )
 
-    # reward *= (not episodic) * (cmd_norm > 0.01)
+    if not episodic:
+        reward *= cmd_norm > 0.01  # No reward for zero commands.
 
     return jp.nan_to_num(reward)

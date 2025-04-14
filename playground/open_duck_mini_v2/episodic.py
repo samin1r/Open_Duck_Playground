@@ -74,15 +74,11 @@ def default_config() -> config_dict.ConfigDict:
         ),
         reward_config=config_dict.create(
             scales=config_dict.create(
-                # tracking_lin_vel=2.5,
-                # tracking_ang_vel=6.0,
+
                 torques=-1.0e-3,
                 action_rate=-0.5,  # was -1.5
-                # stand_still=-0.2,  # was -1.0 TODO try to relax this a bit ?
                 alive=20.0,
-                imitation=10.0,
-                # head_vel=-0.05,
-                # head_pos=-0.5
+                imitation=0.05,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -620,7 +616,6 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         del metrics  # Unused.
 
         ret = {
-            # "orientation": cost_orientation(self.get_gravity(data)),
             "torques": cost_torques(data.actuator_force),
             "action_rate": cost_action_rate(
                 action, info["last_act"]
@@ -635,7 +630,8 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["current_reference_motion"],
                 info["command"],
                 USE_IMITATION_REWARD,
-                # episodic=True
+                ignore_head=True,
+                episodic=True
             ),
         }
 

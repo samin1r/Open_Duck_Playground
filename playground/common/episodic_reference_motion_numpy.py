@@ -34,7 +34,11 @@ class EpisodicReferenceMotion:
 
 
 if __name__ == "__main__":
-    ERM = EpisodicReferenceMotion("/home/antoine/Téléchargements/animation_data.json")
+    ERM = EpisodicReferenceMotion("playground/open_duck_mini_v2/data/animation_data_leg_flexing.json")
     for i in range(ERM.nb_steps):
         frame = ERM.get_frame(i)
+        print(frame)
+        print(type(frame[0]))
+        # print(type(frame))
+        # print(frame.dtype())
         exit()
