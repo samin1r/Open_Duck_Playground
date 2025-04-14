@@ -78,7 +78,7 @@ def default_config() -> config_dict.ConfigDict:
                 torques=-1.0e-3,
                 action_rate=-0.5,  # was -1.5
                 alive=20.0,
-                imitation=0.05,
+                imitation=1.0,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -428,7 +428,8 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         rewards = {
             k: v * self._config.reward_config.scales[k] for k, v in rewards.items()
         }
-        reward = jp.clip(sum(rewards.values()) * self.dt, 0.0, 10000.0)
+        # TODO commented this 
+        # reward = jp.clip(sum(rewards.values()) * self.dt, 0.0, 10000.0)
         # jax.debug.print('STEP REWARD: {}',reward)
         state.info["push"] = push
         state.info["step"] += 1
