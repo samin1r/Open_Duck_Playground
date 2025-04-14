@@ -78,7 +78,7 @@ def default_config() -> config_dict.ConfigDict:
                 torques=-1.0e-3,
                 action_rate=-0.5,  # was -1.5
                 alive=20.0,
-                imitation=0.3,
+                imitation=0.1,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
