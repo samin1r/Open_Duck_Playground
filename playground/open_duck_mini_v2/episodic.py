@@ -428,8 +428,9 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         rewards = {
             k: v * self._config.reward_config.scales[k] for k, v in rewards.items()
         }
-        # TODO commented this 
+        # TODO removed clipping
         # reward = jp.clip(sum(rewards.values()) * self.dt, 0.0, 10000.0)
+        reward = sum(rewards.values()) * self.dt
         # jax.debug.print('STEP REWARD: {}',reward)
         state.info["push"] = push
         state.info["step"] += 1
