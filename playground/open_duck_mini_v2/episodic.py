@@ -122,7 +122,7 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         ).ctrl  # ctrl of all the actual joints (no floating base and no backlash)
 
         if USE_IMITATION_REWARD:
-            self.ERM = EpisodicReferenceMotion("playground/open_duck_mini_v2/data/head_animation_data_test.json")
+            self.ERM = EpisodicReferenceMotion("playground/open_duck_mini_v2/data/animation_head_modif.json")
 
         # Note: First joint is freejoint.
         # get the range of the joints
