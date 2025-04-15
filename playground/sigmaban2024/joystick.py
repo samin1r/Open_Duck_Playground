@@ -87,7 +87,7 @@ def default_config() -> config_dict.ConfigDict:
                 torques=-1.0e-3,
                 # action_rate=-0.375,  # was -1.5
                 action_rate=-1.0,  # was -0.3
-                stand_still=-0.1,  # was -0.3
+                stand_still=-0.5,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
                 # head_pos=-1.0,
@@ -96,8 +96,8 @@ def default_config() -> config_dict.ConfigDict:
         ),
         push_config=config_dict.create(
             enable=True,
-            interval_range=[2.0, 3.0],
-            magnitude_range=[0.1, 8.0],
+            interval_range=[2.0, 5.0],
+            magnitude_range=[0.1, 5.0],
         ),
         lin_vel_x=[-0.15, 0.15],
         lin_vel_y=[-0.2, 0.2],
@@ -258,7 +258,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # )
 
         qvel = self.set_floating_base_qvel(
-            jax.random.uniform(key, (6,), minval=-0.5, maxval=0.5), qvel
+            jax.random.uniform(key, (6,), minval=-0.05, maxval=0.05), qvel
         )
         # print(f'DEBUG3 base qvel: {qvel}')
         ctrl = self.get_actuator_joints_qpos(qpos)
