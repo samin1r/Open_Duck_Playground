@@ -1,6 +1,5 @@
 <mujoco model="sigmaban">
-    <compiler angle="radian" maxhullvert="200"/>
-
+    <compiler angle="radian"/>
 
     <default>
         <geom contype="0" conaffinity="0"/>
