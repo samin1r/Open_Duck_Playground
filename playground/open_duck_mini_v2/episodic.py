@@ -78,7 +78,7 @@ def default_config() -> config_dict.ConfigDict:
                 torques=-1.0e-3,
                 action_rate=-0.5,  # was -1.5
                 alive=20.0,
-                imitation=0.3,
+                imitation=0.2,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -569,8 +569,8 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["motor_targets"],  # 10
                 contact,  # 2
                 # info["current_reference_motion"],
-                # info["imitation_i"],
-                info["imitation_phase"],
+                info["imitation_i"],
+                # info["imitation_phase"],
             ]
         )
 
@@ -596,7 +596,7 @@ class Episodic(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 info["feet_air_time"],  # 2
                 info["current_reference_motion"],
                 info["imitation_i"],
-                info["imitation_phase"],
+                # info["imitation_phase"],
             ]
         )
 
