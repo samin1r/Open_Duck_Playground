@@ -95,8 +95,8 @@ class MjInfer(MJInferBase):
                 self.motor_targets,
                 contacts,
                 # ref if not self.standing else np.array([]),
-                [self.imitation_i]
-                # self.imitation_phase,
+                # [self.imitation_i]
+                self.imitation_phase,
             ]
         )
 

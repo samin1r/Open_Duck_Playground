@@ -29,7 +29,7 @@ def reward_imitation(
     if not episodic:
         w_joint_pos = 15.0
     else:
-        w_joint_pos = 5.0
+        w_joint_pos = 15.0
     w_joint_vel = 1.0e-3
     w_contact = 1.0
 
