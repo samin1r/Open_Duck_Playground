@@ -31,7 +31,7 @@ def reward_imitation(
         w_joint_vel = 1.0e-3
     else:
         w_joint_pos = 1.0
-        w_joint_vel = 1.0
+        w_joint_vel = 15.0
     w_contact = 1.0
 
     # Mansin
