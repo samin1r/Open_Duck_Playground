@@ -83,11 +83,14 @@ class MjInfer(MJInferBase):
 
         contacts = self.get_feet_contacts(data)
 
+        linvel = self.get_linvel(data)
+
         # if not self.standing:
         # ref = self.PRM.get_reference_motion(*command[:3], self.imitation_i)
 
         obs = np.concatenate(
             [
+                linvel,
                 gyro,
                 accelerometer,
                 command,

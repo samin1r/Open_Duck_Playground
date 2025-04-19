@@ -572,6 +572,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         state = jp.hstack(
             [
+                linvel,
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
                 info["command"],  # 7
