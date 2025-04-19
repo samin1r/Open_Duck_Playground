@@ -9,7 +9,7 @@
     </default>
 
     <!-- KP=12 -->
-    <!-- <default>
+    <default>
         <default class="mx106">
             <position kp="21" forcerange="-8 8"/>
             <joint damping="1.7" armature="0.025" frictionloss="0.10"/>
@@ -18,10 +18,10 @@
             <position kp="12.5" forcerange="-5 5"/>
             <joint damping="0.66" armature="0.012" frictionloss="0.09"/>
         </default>
-    </default> -->
+    </default>
 
     <!-- KP=18 -->
-    <default>
+    <!-- <default>
         <default class="mx106">
             <position kp="31.5" forcerange="-10 10" />
             <joint damping="1.7" armature="0.025" frictionloss="0.10" />
@@ -30,7 +30,7 @@
             <position kp="18.8" forcerange="-7 7" />
             <joint damping="0.66" armature="0.12" frictionloss="0.09" />
         </default>
-    </default>
+    </default> -->
 
     <!-- KP=24 -->
     <!-- <default>
