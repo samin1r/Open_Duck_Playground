@@ -86,7 +86,7 @@ def default_config() -> config_dict.ConfigDict:
                 # orientation=-0.5,
                 torques=-1.0e-3,
                 # action_rate=-0.375,  # was -1.5
-                action_rate=-1.0,  # was -0.3
+                action_rate=-1.5,  # was -0.3
                 stand_still=0.0,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
@@ -95,7 +95,7 @@ def default_config() -> config_dict.ConfigDict:
             tracking_sigma=0.01,  # was working at 0.01
         ),
         push_config=config_dict.create(
-            enable=True,
+            enable=False,
             interval_range=[5.0, 10.0],
             magnitude_range=[0.1, 1.0],
         ),
@@ -611,7 +611,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         state = jp.hstack(
             [
-                linvel,
+                # linvel,
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
                 info["command"],  # 7

@@ -127,7 +127,7 @@ class MjInfer(MJInferBase):
 
         obs = np.concatenate(
             [
-                linvel,
+                # linvel,
                 gyro,
                 accelerometer,
                 command,
