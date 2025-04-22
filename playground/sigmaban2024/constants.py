@@ -41,16 +41,16 @@ FEET_SITES = [
 
 LEFT_FEET_GEOMS = [
     "left_foot_cleat_back_left",
-    # "left_foot_cleat_back_right",
-    # "left_foot_cleat_front_left",
-    # "left_foot_cleat_front_right",
+    "left_foot_cleat_back_right",
+    "left_foot_cleat_front_left",
+    "left_foot_cleat_front_right",
 ]
 
 RIGHT_FEET_GEOMS = [
     "right_foot_cleat_back_left",
-    # "right_foot_cleat_back_right",
-    # "right_foot_cleat_front_left",
-    # "right_foot_cleat_front_right",
+    "right_foot_cleat_back_right",
+    "right_foot_cleat_front_left",
+    "right_foot_cleat_front_right",
 ]
 
 HIP_JOINT_NAMES = [

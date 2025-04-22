@@ -28,7 +28,7 @@ class MjInfer(MJInferBase):
         self.angularVelocityScale = 1.0
         self.dof_pos_scale = 1.0
         self.dof_vel_scale = 0.05
-        self.action_scale = 0.5
+        self.action_scale = 1.0
 
         self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
@@ -65,8 +65,45 @@ class MjInfer(MJInferBase):
         # print(f"actual joints idx: {self.get_actual_joints_idx()}")
 
     def get_feet_contacts(self, data):
-        left_contact = self.check_contact(data, "left_foot___list_t0v6opd9rekumc_default", "floor")
-        right_contact = self.check_contact(data, "right_foot_", "floor")
+        left_foot_cleat_back_left = self.check_contact(
+            data, "left_foot_cleat_back_left", "floor"
+        )
+        left_foot_cleat_back_right = self.check_contact(
+            data, "left_foot_cleat_back_right", "floor"
+        )
+        left_foot_cleat_front_left = self.check_contact(
+            data, "left_foot_cleat_front_left", "floor"
+        )
+        left_foot_cleat_front_right = self.check_contact(
+            data, "left_foot_cleat_front_right", "floor"
+        )
+        right_foot_cleat_back_left = self.check_contact(
+            data, "right_foot_cleat_back_left", "floor"
+        )
+        right_foot_cleat_back_right = self.check_contact(
+            data, "right_foot_cleat_back_right", "floor"
+        )
+        right_foot_cleat_front_left = self.check_contact(
+            data, "right_foot_cleat_front_left", "floor"
+        )
+        right_foot_cleat_front_right = self.check_contact(
+            data, "right_foot_cleat_front_right", "floor"
+        )
+        left_contact = (
+            left_foot_cleat_back_left
+            or left_foot_cleat_back_right
+            or left_foot_cleat_front_left
+            or left_foot_cleat_front_right
+        )
+        right_contact = (
+            right_foot_cleat_back_left
+            or right_foot_cleat_back_right
+            or right_foot_cleat_front_left
+            or right_foot_cleat_front_right
+        )
+
+        # left_contact = self.check_contact(data, "left_foot___list_t0v6opd9rekumc_default", "floor")
+        # right_contact = self.check_contact(data, "right_foot_", "floor")
         return left_contact, right_contact
 
     def get_obs(
@@ -209,7 +246,6 @@ class MjInfer(MJInferBase):
 
                         # self.action_filter.push(action)
                         # action = self.action_filter.get_filtered_action()
-
 
                         self.last_last_last_action = self.last_last_action.copy()
                         self.last_last_action = self.last_action.copy()

@@ -56,7 +56,7 @@ def default_config() -> config_dict.ConfigDict:
         # episode_length=450,
         episode_length=1000,
         action_repeat=1,
-        action_scale=0.5,
+        action_scale=1.0,
         # action_scale=1.0,
         dof_vel_scale=0.05,
         history_len=0,
@@ -86,7 +86,7 @@ def default_config() -> config_dict.ConfigDict:
                 # orientation=-0.5,
                 torques=-1.0e-3,
                 # action_rate=-0.375,  # was -1.5
-                action_rate=-0.5,  # was -0.3
+                action_rate=-1.0,  # was -0.3
                 stand_still=0.0,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
@@ -174,8 +174,14 @@ class Joystick(sigmaban_base.SigmabanEnv):
             [self._mj_model.site(name).id for name in constants.FEET_SITES]
         )
         self._floor_geom_id = self._mj_model.geom("floor").id
-        self._feet_geom_id = np.array(
-            [self._mj_model.geom(name).id for name in constants.FEET_GEOMS]
+        # self._feet_geom_id = np.array(
+        #     [self._mj_model.geom(name).id for name in constants.FEET_GEOMS]
+        # )
+        self._left_foot_geom_ids = np.array(
+            [self._mj_model.geom(name).id for name in constants.LEFT_FEET_GEOMS]
+        )
+        self._right_foot_geom_ids = np.array(
+            [self._mj_model.geom(name).id for name in constants.RIGHT_FEET_GEOMS]
         )
 
         foot_linvel_sensor_adr = []
@@ -210,6 +216,34 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # self.action_filter = LowPassActionFilter(
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
+
+    def get_contact(self, data: mjx.Data) -> jax.Array:
+
+
+        # contact = jp.array(
+        #     [
+        #         geoms_colliding(data, geom_id, self._floor_geom_id)
+        #         for geom_id in self._feet_geom_id
+        #     ]
+        # )
+
+        left_contacts = jp.array(
+            [
+                geoms_colliding(data, geom_id, self._floor_geom_id)
+                for geom_id in self._left_foot_geom_ids
+            ]
+        )
+        right_contacts = jp.array(
+            [
+                geoms_colliding(data, geom_id, self._floor_geom_id)
+                for geom_id in self._right_foot_geom_ids
+            ]
+        )
+        left_contact = jp.any(left_contacts, axis=0)
+        right_contact = jp.any(right_contacts, axis=0)
+
+        contact = jp.array([left_contact, right_contact], dtype=bool)
+        return contact
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
         qpos = self._init_q  # the complete qpos
@@ -318,12 +352,16 @@ class Joystick(sigmaban_base.SigmabanEnv):
                     metrics[f"cost/{k}"] = jp.zeros(())
         metrics["swing_peak"] = jp.zeros(())
 
-        contact = jp.array(
-            [
-                geoms_colliding(data, geom_id, self._floor_geom_id)
-                for geom_id in self._feet_geom_id
-            ]
-        )
+
+        # contact = jp.array(
+        #     [
+        #         geoms_colliding(data, geom_id, self._floor_geom_id)
+        #         for geom_id in self._feet_geom_id
+        #     ]
+        # )
+
+        contact = self.get_contact(data)
+
         obs = self._get_obs(data, info, contact)
         reward, done = jp.zeros(2)
         return mjx_env.State(data, obs, reward, done, metrics, info)
@@ -426,12 +464,13 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         state.info["motor_targets"] = motor_targets
 
-        contact = jp.array(
-            [
-                geoms_colliding(data, geom_id, self._floor_geom_id)
-                for geom_id in self._feet_geom_id
-            ]
-        )
+        # contact = jp.array(
+        #     [
+        #         geoms_colliding(data, geom_id, self._floor_geom_id)
+        #         for geom_id in self._feet_geom_id
+        #     ]
+        # )
+        contact = self.get_contact(data)
         contact_filt = contact | state.info["last_contact"]
         first_contact = (state.info["feet_air_time"] > 0.0) * contact_filt
         state.info["feet_air_time"] += self.dt
@@ -608,7 +647,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
                 feet_vel,  # 4*3
                 info["feet_air_time"],  # 2
                 info["current_reference_motion"],
-                info["imitation_phase"]
+                info["imitation_phase"],
             ]
         )
 
