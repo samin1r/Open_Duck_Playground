@@ -328,13 +328,12 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
         self.actions.at[0].set(action.copy())
         self.log_counter += 1
-        if self.log_counter >= 100:
-            jp.save(
-                "actions.npy",
-                self.actions, 
-                allow_pickle=True
-            )
-            exit()
+        # if self.log_counter >= 100:
+        jp.save(
+            "actions.npy",
+            self.actions, 
+            allow_pickle=True
+        )
 
         if USE_IMITATION_REWARD:
             state.info["imitation_i"] += 1
