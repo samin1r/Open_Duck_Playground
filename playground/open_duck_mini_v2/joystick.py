@@ -28,7 +28,6 @@ from mujoco_playground._src.collision import geoms_colliding
 from jax.experimental import io_callback
 
 
-
 from . import constants
 from . import base as open_duck_mini_v2_base
 
@@ -51,8 +50,9 @@ USE_MOTOR_SPEED_LIMITS = True
 
 
 def save_array(array):
-    np.save('actions.npy', array)
-    print('saved actions')
+    np.save("actions.npy", array)
+    print("saved actions")
+
 
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
@@ -211,7 +211,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
-        self.logged_actions = jp.ones((100, 14))
+        self.logged_actions = jp.zeros((100, 14))
         self.log_counter = 0
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
@@ -333,24 +333,29 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
 
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
-
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
         self.logged_actions.at[self.log_counter].set(action.copy())
         self.log_counter += 1
 
         io_callback(save_array, None, self.logged_actions)
 
+        jax.debug.print(
+            "action: {}",
+            action,
+        )
+        jax.debug.print(
+            "logged_actions: {}",
+            self.logged_actions[self.log_counter - 1],
+        )
 
-        # actions_host = jax.device_get(self.logged_actions[:self.log_counter])
-        # np.save("actions.npy", actions_host, allow_pickle=True)
         # jp.save(
         #     "actions.npy",
-        #     self.logged_actions, 
+        #     self.logged_actions,
         #     allow_pickle=True
         # )
         # jp.save(
         #     "actions.npy",
-        #     self.actions, 
+        #     self.actions,
         #     allow_pickle=True
         # )
 
