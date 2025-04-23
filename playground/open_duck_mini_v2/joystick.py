@@ -204,7 +204,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
-        self.actions = []
+        self.actions = jp.zeros((10000, 14))
+        self.log_counter = 0
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
         qpos = self._init_q  # the complete qpos
@@ -322,18 +323,18 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         obs = self._get_obs(data, info, contact)
         reward, done = jp.zeros(2)
 
-        # dump self.actions
-        pickle.dump(
-            self.actions,
-            open("actions.pkl", "wb"),
-        )
-
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
-
-        np_action = np.array(action.copy())
-        self.actions.append(np_action)
+        self.actions.at[0].set(action.copy())
+        self.log_counter += 1
+        if self.log_counter >= 10000:
+            jp.save(
+                "actions.npy",
+                self.actions, 
+                allow_pickle=True
+            )
+            exit()
 
         if USE_IMITATION_REWARD:
             state.info["imitation_i"] += 1
