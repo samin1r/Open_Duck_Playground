@@ -207,7 +207,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         # self.actions = jp.zeros((100, 14))
         # self.log_counter = 0
         # self.actions = []
-        self.actions = jp.array()
+        self.actions = jp.array([])
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
         qpos = self._init_q  # the complete qpos
