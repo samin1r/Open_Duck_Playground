@@ -211,7 +211,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
-        self.logged_actions = jp.zeros((100, 14))
+        self.logged_actions = jp.ones((100, 14))
         self.log_counter = 0
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
