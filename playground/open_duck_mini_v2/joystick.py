@@ -208,11 +208,6 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         self.log_counter = 0
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
-        jp.save(
-            "actions.npy",
-            self.logged_actions, 
-            allow_pickle=True
-        )
         qpos = self._init_q  # the complete qpos
         # print(f'DEBUG0 init qpos: {qpos}')
         qvel = jp.zeros(self.mjx_model.nv)
@@ -334,11 +329,13 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         self.logged_actions.at[self.log_counter].set(action.copy())
         self.log_counter += 1
 
-        jp.save(
-            "actions.npy",
-            self.logged_actions, 
-            allow_pickle=True
-        )
+        actions_host = jax.device_get(self.logged_actions[:self.log_counter])
+        np.save("actions.npy", actions_host, allow_pickle=True)
+        # jp.save(
+        #     "actions.npy",
+        #     self.logged_actions, 
+        #     allow_pickle=True
+        # )
         # jp.save(
         #     "actions.npy",
         #     self.actions, 
