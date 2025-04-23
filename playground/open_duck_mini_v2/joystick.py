@@ -326,7 +326,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
-        self.actions.at[0].set(action.copy())
+        self.actions.at[self.log_counter].set(action.copy())
         self.log_counter += 1
         # if self.log_counter >= 100:
         jp.save(
