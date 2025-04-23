@@ -204,7 +204,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
-        self.actions = jp.zeros((10000, 14))
+        self.actions = jp.zeros((100, 14))
         self.log_counter = 0
 
     def reset(self, rng: jax.Array) -> mjx_env.State:
@@ -328,7 +328,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
         self.actions.at[0].set(action.copy())
         self.log_counter += 1
-        if self.log_counter >= 10000:
+        if self.log_counter >= 100:
             jp.save(
                 "actions.npy",
                 self.actions, 
