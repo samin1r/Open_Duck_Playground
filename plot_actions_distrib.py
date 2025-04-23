@@ -2,6 +2,7 @@ import numpy as np
 
 path = "actions.npy"
 actions = np.load(path, allow_pickle=True)
+print(actions)
 # actions shape : (100, 14) : 14 is the dimension of the action space
 # plot the distribution of actions as a histogram
 flattened_actions = actions.flatten()
