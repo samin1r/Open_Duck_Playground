@@ -331,7 +331,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
 
         np.save(
             "actions.npy",
-            self.actions, 
+            self.logged_actions, 
             allow_pickle=True
         )
         # jp.save(
