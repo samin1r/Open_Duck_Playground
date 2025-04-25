@@ -47,7 +47,7 @@ def render_plane(scene, center, rot_mat, size, rgba):
     scene.ngeom += 1
 
 
-def render_footstep(scene, pos):
+def render_footstep(scene, pos, color=[1, 0, 0, 0.5]):
     """
     pos : [x, y, theta] (m, m, rad)
     """
@@ -55,8 +55,6 @@ def render_footstep(scene, pos):
     center = [x, y, 0.001]
     theta = pos[2]
     size = [0.14, 0.08]
-
-    color = [1, 0, 0, 0.5]
 
     rot_mat = np.eye(3)
     rot_mat[0, 0] = np.cos(theta)

@@ -14,14 +14,27 @@ from playground.sigmaban2024.mujoco_infer_base import MJInferBase
 USE_MOTOR_SPEED_LIMITS = False
 
 
+class SupportFoot:
+    def __init__(self, starting_foot="left"):
+        self.support_foot = starting_foot
+
+    def switch(self):
+        if self.support_foot == "left":
+            self.support_foot = "right"
+        else:
+            self.support_foot = "left"
+
+    def set_support_foot(self, foot):
+        if foot not in ["left", "right"]:
+            raise ValueError("Foot must be 'left' or 'right'")
+        self.support_foot = foot
+
+
 class MjInfer(MJInferBase):
     def __init__(
-        self, model_path: str, reference_data: str, onnx_model_path: str, standing: bool
+        self, model_path: str, reference_data: str, onnx_model_path: str
     ):
         super().__init__(model_path)
-
-        self.standing = standing
-        self.head_control_mode = self.standing
 
         # Params
         self.linearVelocityScale = 1.0
@@ -32,10 +45,16 @@ class MjInfer(MJInferBase):
 
         self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
-        if not self.standing:
-            self.PRM = PolyReferenceMotion(reference_data)
+        self.PRM = PolyReferenceMotion(reference_data)
 
         self.policy = OnnxInfer(onnx_model_path, awd=True)
+
+        self.footstepnet_actor = OnnxInfer(
+            "/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx",
+            awd=True,
+            input_name="onnx::Flatten_0",
+        )
+        self.support_foot = SupportFoot()
 
         self.COMMANDS_RANGE_X = [-0.15, 0.15]
         self.COMMANDS_RANGE_Y = [-0.2, 0.2]
@@ -122,8 +141,6 @@ class MjInfer(MJInferBase):
 
         linvel = self.get_linvel(data)
 
-        # if not self.standing:
-        # ref = self.PRM.get_reference_motion(*command[:3], self.imitation_i)
 
         obs = np.concatenate(
             [
@@ -146,50 +163,26 @@ class MjInfer(MJInferBase):
 
     def key_callback(self, keycode):
         print(f"key: {keycode}")
-        if keycode == 72:  # h
-            self.head_control_mode = not self.head_control_mode
         lin_vel_x = 0
         lin_vel_y = 0
         ang_vel = 0
-        if not self.head_control_mode:
-            if keycode == 265:  # arrow up
-                lin_vel_x = self.COMMANDS_RANGE_X[1]
-            if keycode == 264:  # arrow down
-                lin_vel_x = self.COMMANDS_RANGE_X[0]
-            if keycode == 263:  # arrow left
-                lin_vel_y = self.COMMANDS_RANGE_Y[1]
-            if keycode == 262:  # arrow right
-                lin_vel_y = self.COMMANDS_RANGE_Y[0]
-            if keycode == 81:  # a
-                ang_vel = self.COMMANDS_RANGE_THETA[1]
-            if keycode == 69:  # e
-                ang_vel = self.COMMANDS_RANGE_THETA[0]
-            if keycode == 80:  # p
-                self.phase_frequency_factor += 0.1
-            if keycode == 59:  # m
-                self.phase_frequency_factor -= 0.1
-        else:
-            neck_pitch = 0
-            head_pitch = 0
-            head_yaw = 0
-            head_roll = 0
-            if keycode == 265:  # arrow up
-                head_pitch = self.NECK_PITCH_RANGE[1]
-            if keycode == 264:  # arrow down
-                head_pitch = self.NECK_PITCH_RANGE[0]
-            if keycode == 263:  # arrow left
-                head_yaw = self.HEAD_YAW_RANGE[1]
-            if keycode == 262:  # arrow right
-                head_yaw = self.HEAD_YAW_RANGE[0]
-            if keycode == 81:  # a
-                head_roll = self.HEAD_ROLL_RANGE[1]
-            if keycode == 69:  # e
-                head_roll = self.HEAD_ROLL_RANGE[0]
 
-            self.commands[3] = neck_pitch
-            self.commands[4] = head_pitch
-            self.commands[5] = head_yaw
-            self.commands[6] = head_roll
+        if keycode == 265:  # arrow up
+            lin_vel_x = self.COMMANDS_RANGE_X[1]
+        if keycode == 264:  # arrow down
+            lin_vel_x = self.COMMANDS_RANGE_X[0]
+        if keycode == 263:  # arrow left
+            lin_vel_y = self.COMMANDS_RANGE_Y[1]
+        if keycode == 262:  # arrow right
+            lin_vel_y = self.COMMANDS_RANGE_Y[0]
+        if keycode == 81:  # a
+            ang_vel = self.COMMANDS_RANGE_THETA[1]
+        if keycode == 69:  # e
+            ang_vel = self.COMMANDS_RANGE_THETA[0]
+        if keycode == 80:  # p
+            self.phase_frequency_factor += 0.1
+        if keycode == 59:  # m
+            self.phase_frequency_factor -= 0.1
 
         self.commands[0] = lin_vel_x
         self.commands[1] = lin_vel_y
@@ -214,29 +207,33 @@ class MjInfer(MJInferBase):
                     counter += 1
 
                     if counter % self.decimation == 0:
-                        if not self.standing:
-                            self.imitation_i += 1.0 * self.phase_frequency_factor
-                            self.imitation_i = (
-                                self.imitation_i % self.PRM.nb_steps_in_period
-                            )
-                            # print(self.PRM.nb_steps_in_period)
-                            # exit()
-                            self.imitation_phase = np.array(
-                                [
-                                    np.cos(
-                                        self.imitation_i
-                                        / self.PRM.nb_steps_in_period
-                                        * 2
-                                        * np.pi
-                                    ),
-                                    np.sin(
-                                        self.imitation_i
-                                        / self.PRM.nb_steps_in_period
-                                        * 2
-                                        * np.pi
-                                    ),
-                                ]
-                            )
+                        self.imitation_i += 1.0 * self.phase_frequency_factor
+                        self.imitation_i = (
+                            self.imitation_i % self.PRM.nb_steps_in_period
+                        )
+
+                        self.imitation_phase = np.array(
+                            [
+                                np.cos(
+                                    self.imitation_i
+                                    / self.PRM.nb_steps_in_period
+                                    * 2
+                                    * np.pi
+                                ),
+                                np.sin(
+                                    self.imitation_i
+                                    / self.PRM.nb_steps_in_period
+                                    * 2
+                                    * np.pi
+                                ),
+                            ]
+                        )
+
+                        if self.imitation_phase[0] > 0.0:
+                            self.support_foot.set_support_foot("left")
+                        else:
+                            self.support_foot.set_support_foot("right")
+
                         obs = self.get_obs(
                             self.data,
                             self.commands,
@@ -309,11 +306,10 @@ if __name__ == "__main__":
         type=str,
         default="playground/sigmaban2024/xmls/scene_flat_terrain.xml",
     )
-    parser.add_argument("--standing", action="store_true", default=False)
 
     args = parser.parse_args()
 
     mjinfer = MjInfer(
-        args.model_path, args.reference_data, args.onnx_model_path, args.standing
+        args.model_path, args.reference_data, args.onnx_model_path
     )
     mjinfer.run()
