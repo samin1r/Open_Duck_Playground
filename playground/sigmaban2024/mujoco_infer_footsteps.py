@@ -7,7 +7,7 @@ import time
 import argparse
 from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
-from playground.common.utils import LowPassActionFilter
+from playground.common.utils import LowPassActionFilter, render_footstep
 
 from playground.sigmaban2024.mujoco_infer_base import MJInferBase
 
@@ -273,6 +273,15 @@ class MjInfer(MJInferBase):
                         self.data.ctrl = self.motor_targets.copy()
 
                         viewer.user_scn.ngeom = 0  # Clear previous custom geometries
+
+                        render_footstep(
+                            viewer.user_scn,
+                            pos=[0, 0, np.pi / 3],
+                        )
+                        render_footstep(
+                            viewer.user_scn,
+                            pos=[0, 0.2, -np.pi / 3],
+                        )
 
                     viewer.sync()
 
