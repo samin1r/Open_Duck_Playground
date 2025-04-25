@@ -14,6 +14,24 @@ from playground.open_duck_mini_v2.mujoco_infer_base import MJInferBase
 USE_MOTOR_SPEED_LIMITS = True
 
 
+# Visualization function
+def render_rectangle(scene, center, size, rgba):
+    sx, sy = size
+    # vertices = np.array([
+    #     [center[0] - sx / 2, center[1] - sy / 2, center[2]],
+    #     [center[0] + sx / 2, center[1] - sy / 2, center[2]],
+    #     [center[0] + sx / 2, center[1] + sy / 2, center[2]],
+    #     [center[0] - sx / 2, center[1] + sy / 2, center[2]]
+    # ])
+
+    # Draw rectangle as a polygon
+    mujoco.mjv_initGeom(scene.geoms[scene.ngeom],
+                        type=mujoco.mjtGeom.mjGEOM_BOX,
+                        size=[sx / 2, sy / 2, 0.001],
+                        pos=center,
+                        rgba=rgba)
+    scene.ngeom += 1
+
 class MjInfer(MJInferBase):
     def __init__(
         self, model_path: str, reference_data: str, onnx_model_path: str, standing: bool
@@ -229,6 +247,7 @@ class MjInfer(MJInferBase):
                         # head_targets = self.commands[3:]
                         # self.motor_targets[5:9] = head_targets
                         self.data.ctrl = self.motor_targets.copy()
+
 
                     viewer.sync()
 

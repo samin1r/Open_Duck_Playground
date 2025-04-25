@@ -14,6 +14,26 @@ from playground.sigmaban2024.mujoco_infer_base import MJInferBase
 USE_MOTOR_SPEED_LIMITS = False
 
 
+def render_plane(scene, center, size, rgba):
+    if scene.ngeom >= len(scene.geoms):
+        return
+
+    sx, sy = size
+
+    mujoco.mjv_initGeom(
+        scene.geoms[scene.ngeom],
+        mujoco.mjtGeom.mjGEOM_PLANE,
+        size=np.array(
+            [sx / 2, sy / 2, 0.0], dtype=np.float64
+        ),  # Planes have no thickness
+        pos=np.array(center, dtype=np.float64),
+        mat=np.eye(3).flatten(),
+        rgba=np.array(rgba, dtype=np.float32),
+    )
+
+    scene.ngeom += 1
+
+
 class MjInfer(MJInferBase):
     def __init__(
         self, model_path: str, reference_data: str, onnx_model_path: str, standing: bool
@@ -271,6 +291,13 @@ class MjInfer(MJInferBase):
                         # head_targets = self.commands[3:]
                         # self.motor_targets[5:9] = head_targets
                         self.data.ctrl = self.motor_targets.copy()
+                        # Add rectangle at each frame
+                        render_plane(
+                            viewer.user_scn,
+                            center=[0, 0, 0.001],
+                            size=[0.14, 0.08],
+                            rgba=[1, 0, 0, 0.5],
+                        )
 
                     viewer.sync()
 
