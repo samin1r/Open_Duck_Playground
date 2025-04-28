@@ -7,33 +7,17 @@ import time
 import argparse
 from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
-from playground.common.utils import LowPassActionFilter, render_footstep
 
 from playground.sigmaban2024.mujoco_infer_base import MJInferBase
+from playground.sigmaban2024.footstepnet_wrapper import Trajectory
+from playground.common.utils import render_plane
 
 USE_MOTOR_SPEED_LIMITS = False
 
 
-class SupportFoot:
-    def __init__(self, starting_foot="left"):
-        self.support_foot = starting_foot
-
-    def switch(self):
-        if self.support_foot == "left":
-            self.support_foot = "right"
-        else:
-            self.support_foot = "left"
-
-    def set_support_foot(self, foot):
-        if foot not in ["left", "right"]:
-            raise ValueError("Foot must be 'left' or 'right'")
-        self.support_foot = foot
-
-
 class MjInfer(MJInferBase):
-    def __init__(
-        self, model_path: str, reference_data: str, onnx_model_path: str
-    ):
+
+    def __init__(self, model_path: str, reference_data: str, onnx_model_path: str):
         super().__init__(model_path)
 
         # Params
@@ -42,8 +26,6 @@ class MjInfer(MJInferBase):
         self.dof_pos_scale = 1.0
         self.dof_vel_scale = 0.05
         self.action_scale = 1.0
-
-        self.action_filter = LowPassActionFilter(50, cutoff_frequency=37.5)
 
         self.PRM = PolyReferenceMotion(reference_data)
 
@@ -54,7 +36,6 @@ class MjInfer(MJInferBase):
             awd=True,
             input_name="onnx::Flatten_0",
         )
-        self.support_foot = SupportFoot()
 
         self.COMMANDS_RANGE_X = [-0.15, 0.15]
         self.COMMANDS_RANGE_Y = [-0.2, 0.2]
@@ -82,6 +63,16 @@ class MjInfer(MJInferBase):
         print(f"actuator names: {self.actuator_names}")
         print(f"backlash joint names: {self.backlash_joint_names}")
         # print(f"actual joints idx: {self.get_actual_joints_idx()}")
+
+        self.TR = Trajectory()
+        self.TR.sample_trajectory(
+            [0.0, 0.15 / 2, 0.0],
+            "left",
+            np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]),
+            "left",
+        )
+        self.trajectory_i = 0
+        # self.commands[:3] = self.TR.velocities[self.trajectory_i]
 
     def get_feet_contacts(self, data):
         left_foot_cleat_back_left = self.check_contact(
@@ -141,7 +132,6 @@ class MjInfer(MJInferBase):
 
         linvel = self.get_linvel(data)
 
-
         obs = np.concatenate(
             [
                 # linvel,
@@ -161,7 +151,47 @@ class MjInfer(MJInferBase):
 
         return obs
 
+    def get_projected_left_foot(self):
+        body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "left_ps_2")
+        pos = self.data.xpos[body_id]  # np.array([x, y, z])
+
+        offset = [0.14 / 2, -0.08 / 2, 0.0]
+        mat = self.data.xmat[body_id].reshape(3, 3)  # rotation matrix
+
+        # project pos on the ground
+        pos[2] = 0.001
+
+        # cancel all rotation except z
+        theta = np.arctan2(mat[1, 0], mat[0, 0])
+
+        # Build a pure yaw rotation matrix
+        mat = np.array(
+            [
+                [np.cos(theta), -np.sin(theta), 0],
+                [np.sin(theta), np.cos(theta), 0],
+                [0, 0, 1],
+            ]
+        )
+
+        # apply the offset to the position resulting from the rotation
+        # the offset is in the local frame of the left foot
+        offset_world = mat @ offset
+        pos += offset_world
+
+        return pos, theta, mat
+
+    def project_left_foot(self, scene, pos, mat):
+
+        render_plane(
+            scene,
+            pos,
+            mat,
+            [0.14, 0.08],
+            [1, 0, 0, 0.5],
+        )
+
     def key_callback(self, keycode):
+        return 0
         print(f"key: {keycode}")
         lin_vel_x = 0
         lin_vel_y = 0
@@ -187,6 +217,7 @@ class MjInfer(MJInferBase):
         self.commands[0] = lin_vel_x
         self.commands[1] = lin_vel_y
         self.commands[2] = ang_vel
+        print(self.commands)
 
     def run(self):
         try:
@@ -199,7 +230,6 @@ class MjInfer(MJInferBase):
             ) as viewer:
                 counter = 0
                 while True:
-
                     step_start = time.time()
 
                     mujoco.mj_step(self.model, self.data)
@@ -207,11 +237,18 @@ class MjInfer(MJInferBase):
                     counter += 1
 
                     if counter % self.decimation == 0:
+                        viewer.user_scn.ngeom = 0  # Clear previous custom geometries
+
+                        left_foot_pos, left_foot_theta, left_foot_mat = (
+                            self.get_projected_left_foot()
+                        )
+
                         self.imitation_i += 1.0 * self.phase_frequency_factor
                         self.imitation_i = (
                             self.imitation_i % self.PRM.nb_steps_in_period
                         )
 
+                        self.prev_imitation_phase = self.imitation_phase.copy()
                         self.imitation_phase = np.array(
                             [
                                 np.cos(
@@ -228,11 +265,56 @@ class MjInfer(MJInferBase):
                                 ),
                             ]
                         )
+                        switch = np.sign(self.imitation_phase[0]) != np.sign(
+                            self.prev_imitation_phase[0]
+                        )
+                        if switch:
+                            if self.trajectory_i >= len(self.TR.world_velocities) - 1:
+                                pos = [
+                                    left_foot_pos[0],
+                                    left_foot_pos[1],
+                                    left_foot_theta,
+                                ]
+                                self.TR.sample_trajectory(
+                                    pos,
+                                    "left",
+                                    np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]),
+                                    "left",
+                                )
+                                self.trajectory_i = 0
+                            else:
+                                self.trajectory_i += 1
 
-                        if self.imitation_phase[0] > 0.0:
-                            self.support_foot.set_support_foot("left")
-                        else:
-                            self.support_foot.set_support_foot("right")
+                            # # [lin_vel_x, lin_vel_y, ang_vel]
+                            world_velocities = self.TR.world_velocities[
+                                self.trajectory_i
+                            ]
+
+                            theta = left_foot_theta
+                            # Extract linear and angular parts
+                            linear_vel_world = world_velocities[:2]  # [vx, vy]
+                            angular_vel_world = world_velocities[2]  # omega (yaw rate)
+
+                            # Rotation matrix to rotate from world to local frame (2D)
+                            rot_inv_2d = np.array(
+                                [
+                                    [np.cos(theta), np.sin(theta)],
+                                    [-np.sin(theta), np.cos(theta)],
+                                ]
+                            )
+
+                            # Rotate linear velocity
+                            linear_vel_local = rot_inv_2d @ linear_vel_world
+
+                            # Angular velocity stays the same
+                            angular_vel_local = angular_vel_world
+
+                            # Combine
+                            local_velocities = np.hstack(
+                                (linear_vel_local, angular_vel_local)
+                            )
+
+                            self.commands[:3] = local_velocities
 
                         obs = self.get_obs(
                             self.data,
@@ -240,9 +322,6 @@ class MjInfer(MJInferBase):
                         )
                         self.saved_obs.append(obs)
                         action = self.policy.infer(obs)
-
-                        # self.action_filter.push(action)
-                        # action = self.action_filter.get_filtered_action()
 
                         self.last_last_last_action = self.last_last_action.copy()
                         self.last_last_action = self.last_action.copy()
@@ -269,15 +348,12 @@ class MjInfer(MJInferBase):
                         # self.motor_targets[5:9] = head_targets
                         self.data.ctrl = self.motor_targets.copy()
 
-                        viewer.user_scn.ngeom = 0  # Clear previous custom geometries
-
-                        render_footstep(
-                            viewer.user_scn,
-                            pos=[0, 0, np.pi / 3],
+                        self.project_left_foot(
+                            viewer.user_scn, left_foot_pos, left_foot_mat
                         )
-                        render_footstep(
+
+                        self.TR.render(
                             viewer.user_scn,
-                            pos=[0, 0.2, -np.pi / 3],
                         )
 
                     viewer.sync()
@@ -309,7 +385,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    mjinfer = MjInfer(
-        args.model_path, args.reference_data, args.onnx_model_path
-    )
+    mjinfer = MjInfer(args.model_path, args.reference_data, args.onnx_model_path)
     mjinfer.run()

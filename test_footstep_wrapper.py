@@ -3,16 +3,17 @@ import time
 import mujoco
 import mujoco.viewer
 
-from playground.sigmaban2024.footstepnet_wrapper import FootstepnetWrapper
+from playground.sigmaban2024.footstepnet_wrapper import FootstepnetWrapper, Trajectory
 
 FW = FootstepnetWrapper(
     "/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx"
 )
+TR = Trajectory()
 
 phase = np.array([0.0, 0.0])
 prev_phase = np.array([0.0, 0.0])
 # nb_steps_in_period = 36
-nb_steps_in_period = 4
+nb_steps_in_period = 2
 # nb_steps_in_period = 100
 i = 0.0
 
@@ -81,6 +82,14 @@ with mujoco.viewer.launch_passive(
 
         if FW.reached_target():
             FW.reset_random()
+            TR.sample_trajectory(
+                FW.feet.foot[FW.feet.support_foot],
+                FW.feet.support_foot,
+                FW.target,
+                FW.target_support_foot,
+            )
+
+        TR.render(viewer.user_scn)
 
         took = time.time() - s
         time.sleep(max(0, 1 / freq - took))

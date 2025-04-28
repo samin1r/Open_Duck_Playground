@@ -157,10 +157,12 @@ class Feet:
 
 
 class FootstepnetWrapper:
+
     def __init__(
         self,
         model_path,
         init_pos=[0.0, 0.0, 0.0],
+        init_support_foot="left",
         init_target=[0.0, 0.0, 0.0],
         init_target_support_foot="left",
     ):
@@ -171,7 +173,7 @@ class FootstepnetWrapper:
         )
         self.target = init_target
         self.target_support_foot = init_target_support_foot
-        self.feet = Feet(init_pos=init_pos)
+        self.feet = Feet(init_pos=init_pos, starting_support_foot=init_support_foot)
         self.action_low = [-0.08, -0.04, np.deg2rad(-20)]
         self.action_high = [0.08, 0.04, np.deg2rad(20)]
         self.saved_footsteps = []
@@ -192,12 +194,13 @@ class FootstepnetWrapper:
         self.feet.move_swing_foot(action)
         self.feet.switch_support_foot()
 
-    def render(self, scene, render_steps_history=True):
+    def render(self, scene, render_steps_history=False):
         self.feet.draw(scene)
 
-        for i, feet in enumerate(self.saved_footsteps):
-            alpha = i / len(self.saved_footsteps)
-            feet.draw(scene, alpha=alpha)
+        if render_steps_history:
+            for i, feet in enumerate(self.saved_footsteps):
+                alpha = i / len(self.saved_footsteps)
+                feet.draw(scene, alpha=alpha)
 
         render_footstep(
             scene,
@@ -225,9 +228,7 @@ class FootstepnetWrapper:
     def reset_random(self):
         self.target = np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi])
         self.obstacle = np.random.uniform([-2, -2, 0], [2, 2, 0.25])
-        self.target_support_foot = (
-            "left" if self.feet.support_foot == "right" else "right"
-        )
+        self.target_support_foot = "left"
 
     def get_obs(self):
         T_world_support = self.feet.get_T_world_support()
@@ -301,3 +302,68 @@ class FootstepnetWrapper:
             clipped_step /= norm
 
         return clipped_step * factor
+
+
+class Trajectory:
+    def __init__(self, nb_steps_in_period=36, dt=0.02):
+        self.trajectory = []
+        self.time_between_steps = dt * nb_steps_in_period
+        self.world_velocities = []
+
+    def sample_trajectory(
+        self, starting_pos, starting_support_foot, target, target_support_foot
+    ):
+        """
+        Sample a trajectory from the starting position to the target position.
+        """
+        self.trajectory = []
+        self.world_velocities = []
+        FW = FootstepnetWrapper(
+            model_path="/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx",
+            init_pos=starting_pos,
+            init_support_foot=starting_support_foot,
+            init_target=target,
+            init_target_support_foot=target_support_foot,
+        )
+
+        prev_pos = starting_pos
+        i = 0
+        while not FW.reached_target():
+            FW.step()
+
+            self.trajectory.append(FW.feet.copy())
+
+            i += 1
+            if i % 2 == 0:
+                # everytime we go back to the first foot
+                # We completed a walking period
+                current_xy = FW.feet.foot[FW.feet.support_foot][:2]
+                current_theta = FW.feet.foot[FW.feet.support_foot][2]
+
+                prev_xy = prev_pos[:2]
+                prev_theta = prev_pos[2]
+
+                lin_vel = (current_xy - prev_xy) / self.time_between_steps
+                ang_vel = (current_theta - prev_theta) / self.time_between_steps
+                self.world_velocities.append(
+                    [lin_vel[0], lin_vel[1], ang_vel],
+                )
+
+                prev_pos = FW.feet.foot[FW.feet.support_foot].copy()
+
+    def clear(self):
+        self.trajectory = []
+
+    def render(self, scene):
+        for i, feet in enumerate(self.trajectory):
+            feet.draw(scene, alpha=0.1)
+
+
+if __name__ == "__main__":
+    t = Trajectory()
+    t.sample_trajectory(
+        starting_pos=[0.0, 0.0, 0.0],
+        starting_support_foot="left",
+        target=[1.0, 1.0, 0.0],
+        target_support_foot="left",
+    )
