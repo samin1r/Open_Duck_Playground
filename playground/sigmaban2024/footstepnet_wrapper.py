@@ -15,13 +15,23 @@ def close(pos1, pos2, tol=0.05):
 
 
 class Feet:
-    def __init__(self, foot_size=[0.14, 0.08], feet_spacing=0.15):
+    def __init__(
+        self,
+        foot_size=[0.14, 0.08],
+        feet_spacing=0.15,
+        init_pos=[0.0, 0.0, 0.0],
+        starting_support_foot="left",
+    ):
         self.foot_size = foot_size
         self.feet_spacing = feet_spacing
         self.foot = {}
-        self.foot["left"] = np.array([0.0, 0.0, 0.0])  # x, y, theta
-        self.foot["right"] = np.array([0.0, -self.feet_spacing, 0.0])  # x, y, theta
-        self.support_foot = "left"
+        self.foot["left"] = np.array(init_pos)  # x, y, theta
+        right_foot_init_pos = np.array(init_pos)
+        right_foot_init_pos[1] -= self.feet_spacing
+        self.foot["right"] = np.array(right_foot_init_pos)  # x, y, theta
+
+        self.support_foot = starting_support_foot
+
         self.left_foot_color = [0, 0, 0, 0.5]
         self.right_foot_color = [1, 0, 0, 0.5]
 
@@ -147,15 +157,21 @@ class Feet:
 
 
 class FootstepnetWrapper:
-    def __init__(self, model_path):
+    def __init__(
+        self,
+        model_path,
+        init_pos=[0.0, 0.0, 0.0],
+        init_target=[0.0, 0.0, 0.0],
+        init_target_support_foot="left",
+    ):
         self.policy = OnnxInfer(
             model_path,
             awd=True,
             input_name="onnx::Flatten_0",
         )
-        self.target = [0, 0, 0]
-        self.target_support_foot = "left"
-        self.feet = Feet()
+        self.target = init_target
+        self.target_support_foot = init_target_support_foot
+        self.feet = Feet(init_pos=init_pos)
         self.action_low = [-0.08, -0.04, np.deg2rad(-20)]
         self.action_high = [0.08, 0.04, np.deg2rad(20)]
         self.saved_footsteps = []
@@ -193,6 +209,18 @@ class FootstepnetWrapper:
     def reached_target(self):
         support_foot = self.feet.foot[self.feet.support_foot]
         return close(support_foot, self.target, tol=0.05)
+
+    def reset(
+        self,
+        init_pos,
+        init_target,
+        init_target_support_foot="left",
+        starting_support_foot="left",
+    ):
+        self.feet = Feet(init_pos=init_pos, starting_support_foot=starting_support_foot)
+        self.target = init_target
+        self.target_support_foot = init_target_support_foot
+        self.saved_footsteps = []
 
     def reset_random(self):
         self.target = np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi])
