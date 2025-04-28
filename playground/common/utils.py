@@ -47,14 +47,14 @@ def render_plane(scene, center, rot_mat, size, rgba):
     scene.ngeom += 1
 
 
-def render_footstep(scene, pos, color=[1, 0, 0, 0.5]):
+def render_footstep(scene, pos, foot_size, color=[1, 0, 0, 0.5]):
     """
     pos : [x, y, theta] (m, m, rad)
     """
     x, y = pos[:2]
     center = [x, y, 0.001]
     theta = pos[2]
-    size = [0.14, 0.08]
+    size = foot_size
 
     rot_mat = np.eye(3)
     rot_mat[0, 0] = np.cos(theta)
@@ -63,7 +63,7 @@ def render_footstep(scene, pos, color=[1, 0, 0, 0.5]):
     rot_mat[1, 1] = np.cos(theta)
 
     tip_size = [size[0] / 6, size[1]]
-    tip_color = [0, 0, 0, 1.0]
+    tip_color = [0, 0, 0, color[3]]
 
     # rotate and translate the tip
     tip_rot_mat = np.eye(3)

@@ -15,13 +15,22 @@ def close(pos1, pos2, tol=0.05):
 
 
 class Feet:
-    def __init__(self):
+    def __init__(self, foot_size=[0.14, 0.08], feet_spacing=0.15):
+        self.foot_size = foot_size
+        self.feet_spacing = feet_spacing
         self.foot = {}
         self.foot["left"] = np.array([0.0, 0.0, 0.0])  # x, y, theta
-        self.foot["right"] = np.array([0.0, -0.15, 0.0])  # x, y, theta
+        self.foot["right"] = np.array([0.0, -self.feet_spacing, 0.0])  # x, y, theta
         self.support_foot = "left"
         self.left_foot_color = [0, 0, 0, 0.5]
         self.right_foot_color = [1, 0, 0, 0.5]
+
+    def copy(self):
+        feet_copy = Feet(self.foot_size, self.feet_spacing)
+        feet_copy.foot["left"] = self.foot["left"].copy()
+        feet_copy.foot["right"] = self.foot["right"].copy()
+        feet_copy.support_foot = self.support_foot
+        return feet_copy
 
     def set_support_foot(self, foot):
         if foot not in ["left", "right"]:
@@ -113,21 +122,27 @@ class Feet:
     def get_T_world_neutral(self):
         offset_sign = 1 if self.support_foot == "right" else -1
         T_support_neutral = np.eye(3)
-        T_support_neutral[0:2, 2] = [0, offset_sign * 0.15]
+        T_support_neutral[0:2, 2] = [0, offset_sign * self.feet_spacing]
 
         return self.get_T_world_support() @ T_support_neutral
 
-    def draw(self, scene):
+    def draw(self, scene, alpha=1.0):
 
+        left_color = self.left_foot_color.copy()
+        left_color[3] = alpha
+        right_color = self.right_foot_color.copy()
+        right_color[3] = alpha
         render_footstep(
             scene,
             pos=self.foot["left"],
-            color=self.left_foot_color,
+            foot_size=self.foot_size,
+            color=left_color,
         )
         render_footstep(
             scene,
             pos=self.foot["right"],
-            color=self.right_foot_color,
+            foot_size=self.foot_size,
+            color=right_color,
         )
 
 
@@ -143,8 +158,13 @@ class FootstepnetWrapper:
         self.feet = Feet()
         self.action_low = [-0.08, -0.04, np.deg2rad(-20)]
         self.action_high = [0.08, 0.04, np.deg2rad(20)]
+        self.saved_footsteps = []
+        self.max_saved_footsteps = 10
 
     def step(self):
+        self.saved_footsteps.append(self.feet.copy())
+        self.saved_footsteps = self.saved_footsteps[-self.max_saved_footsteps :]
+
         obs = self.get_obs()
         action = self.policy.infer(obs)
         if self.feet.support_foot == "left":
@@ -156,12 +176,17 @@ class FootstepnetWrapper:
         self.feet.move_swing_foot(action)
         self.feet.switch_support_foot()
 
-    def render(self, scene):
+    def render(self, scene, render_steps_history=True):
         self.feet.draw(scene)
+
+        for i, feet in enumerate(self.saved_footsteps):
+            alpha = i / len(self.saved_footsteps)
+            feet.draw(scene, alpha=alpha)
 
         render_footstep(
             scene,
             pos=self.target,
+            foot_size=self.feet.foot_size,
             color=[0, 1, 0, 0.5],
         )
 
