@@ -9,7 +9,7 @@ from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
 
 from playground.sigmaban2024.mujoco_infer_base import MJInferBase
-from playground.sigmaban2024.footstepnet_wrapper import Trajectory
+from playground.sigmaban2024.footstepnet_wrapper_numpy import Trajectory
 from playground.common.utils import render_plane
 
 USE_MOTOR_SPEED_LIMITS = False
@@ -64,7 +64,10 @@ class MjInfer(MJInferBase):
         print(f"backlash joint names: {self.backlash_joint_names}")
         # print(f"actual joints idx: {self.get_actual_joints_idx()}")
 
-        self.TR = Trajectory()
+        self.TR = Trajectory(
+            model_path="playground/sigmaban2024/data/footsteps-planning-any-v0_actor.onnx"
+        )
+
         self.TR.sample_trajectory(
             [0.0, 0.15 / 2, 0.0],
             "left",

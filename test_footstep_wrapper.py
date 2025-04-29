@@ -3,12 +3,12 @@ import time
 import mujoco
 import mujoco.viewer
 
-from playground.sigmaban2024.footstepnet_wrapper import FootstepnetWrapper, Trajectory
+from playground.sigmaban2024.footstepnet_wrapper_numpy import FootstepnetWrapper, Trajectory
 
 FW = FootstepnetWrapper(
     "/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx"
 )
-TR = Trajectory()
+TR = Trajectory(model_path="/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx")
 
 phase = np.array([0.0, 0.0])
 prev_phase = np.array([0.0, 0.0])
