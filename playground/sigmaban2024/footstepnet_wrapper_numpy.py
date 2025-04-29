@@ -165,6 +165,8 @@ class FootstepnetWrapper:
         init_support_foot="left",
         init_target=[0.0, 0.0, 0.0],
         init_target_support_foot="left",
+        action_low=[-0.08, -0.04, np.deg2rad(-20)],
+        action_high=[0.08, 0.04, np.deg2rad(20)],
     ):
         self.policy = OnnxInfer(
             model_path,
@@ -174,8 +176,8 @@ class FootstepnetWrapper:
         self.target = init_target
         self.target_support_foot = init_target_support_foot
         self.feet = Feet(init_pos=init_pos, starting_support_foot=init_support_foot)
-        self.action_low = [-0.08, -0.04, np.deg2rad(-20)]
-        self.action_high = [0.08, 0.04, np.deg2rad(20)]
+        self.action_low = action_low
+        self.action_high = action_high
         self.saved_footsteps = []
         self.max_saved_footsteps = 10
 
@@ -307,7 +309,7 @@ class FootstepnetWrapper:
 class Trajectory:
     def __init__(self, model_path, nb_steps_in_period=36, dt=0.02):
         self.model_path = model_path
-            
+
         self.trajectory = []
         self.time_between_steps = dt * nb_steps_in_period
         self.world_velocities = []

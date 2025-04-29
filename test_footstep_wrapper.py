@@ -3,7 +3,7 @@ import time
 import mujoco
 import mujoco.viewer
 
-from playground.sigmaban2024.footstepnet_wrapper_numpy import FootstepnetWrapper, Trajectory
+from playground.sigmaban2024.footstepnet_wrapper import FootstepnetWrapper, Trajectory
 
 FW = FootstepnetWrapper(
     "/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx"

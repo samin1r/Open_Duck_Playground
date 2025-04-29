@@ -204,6 +204,8 @@ class FootstepnetWrapper:
         init_support_foot="left",
         init_target=[0.0, 0.0, 0.0],
         init_target_support_foot="left",
+        action_low = jp.array([-0.08, -0.04, jp.deg2rad(-20)]),
+        action_high = jp.array([0.08, 0.04, jp.deg2rad(20)])
     ):
         self.policy = OnnxInfer(
             model_path,
@@ -212,8 +214,8 @@ class FootstepnetWrapper:
         self.target = init_target
         self.target_support_foot = init_target_support_foot
         self.feet = Feet(init_pos=init_pos, starting_support_foot=init_support_foot)
-        self.action_low = jp.array([-0.08, -0.04, jp.deg2rad(-20)])
-        self.action_high = jp.array([0.08, 0.04, jp.deg2rad(20)])
+        self.action_low = action_low
+        self.action_high = action_high
 
     def step(self):
 

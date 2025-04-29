@@ -43,6 +43,7 @@ from playground.common.rewards import (
     # cost_head_pos,
 )
 from playground.sigmaban2024.custom_rewards import reward_imitation
+from playground.sigmaban2024.footstepnet_wrapper import Trajectory
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
 USE_IMITATION_REWARD = True
@@ -217,6 +218,8 @@ class Joystick(sigmaban_base.SigmabanEnv):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
+        self.TR = Trajectory(model_path="/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx")
+
     def get_contact(self, data: mjx.Data) -> jax.Array:
 
 
@@ -361,6 +364,13 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # )
 
         contact = self.get_contact(data)
+
+        self.TR.sample_trajectory(
+            jp.array([0.0, 0.15 / 2, 0.0]),
+            "left",
+            jp.array([1.0, 1.0 / 2, 0.0]),
+            "left",
+        )
 
         obs = self._get_obs(data, info, contact)
         reward, done = jp.zeros(2)
