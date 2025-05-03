@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Joystick task for Sigmaban. (based on Berkeley Humanoid)"""
+"""Footsteps task for Sigmaban. (based on Berkeley Humanoid)"""
 
 from typing import Any, Dict, Optional, Union
 import jax
@@ -29,21 +29,14 @@ from mujoco_playground._src.collision import geoms_colliding
 from . import constants
 from . import base as sigmaban_base
 
-# from playground.common.utils import LowPassActionFilter
 from playground.common.poly_reference_motion import PolyReferenceMotion
 from playground.common.rewards import (
-    reward_tracking_lin_vel,
-    reward_tracking_ang_vel,
-    # cost_orientation,
     cost_torques,
     cost_action_rate,
-    cost_stand_still,
     reward_alive,
-    # reward_imitation,
-    # cost_head_pos,
 )
 from playground.sigmaban2024.custom_rewards import reward_imitation
-from playground.sigmaban2024.footstepnet_wrapper import Trajectory
+from playground.sigmaban2024.footstepnet_wrapper import FootstepnetWrapper
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
 USE_IMITATION_REWARD = True
@@ -58,7 +51,6 @@ def default_config() -> config_dict.ConfigDict:
         episode_length=1000,
         action_repeat=1,
         action_scale=1.0,
-        # action_scale=1.0,
         dof_vel_scale=0.05,
         history_len=0,
         soft_joint_pos_limit_factor=0.95,
@@ -82,16 +74,10 @@ def default_config() -> config_dict.ConfigDict:
         ),
         reward_config=config_dict.create(
             scales=config_dict.create(
-                tracking_lin_vel=2.5,
-                tracking_ang_vel=4.0,
-                # orientation=-0.5,
                 torques=-1.0e-3,
-                # action_rate=-0.375,  # was -1.5
                 action_rate=-1.5,  # was -0.3
-                stand_still=0.0,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
-                # head_pos=-1.0,
             ),
             tracking_sigma=0.01,  # was working at 0.01
         ),
@@ -111,8 +97,8 @@ def default_config() -> config_dict.ConfigDict:
     )
 
 
-class Joystick(sigmaban_base.SigmabanEnv):
-    """Track a joystick command."""
+class Footsteps(sigmaban_base.SigmabanEnv):
+    """Track footsteps"""
 
     def __init__(
         self,
@@ -218,17 +204,16 @@ class Joystick(sigmaban_base.SigmabanEnv):
         #     1 / self._config.ctrl_dt, cutoff_frequency=37.5
         # )
 
-        self.TR = Trajectory(model_path="/home/antoine/Téléchargements/footsteps-planning-any-v0_actor.onnx")
+        self.target = jp.array(np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]))
+        self.FW = FootstepnetWrapper(
+            model_path="playground/sigmaban2024/data/footsteps-planning-any-v0_actor.onnx",
+            init_target=self.target,
+            init_support_foot="right",
+            action_low=jp.array([-0.04, -0.02, np.deg2rad(-20)]),
+            action_high=jp.array([0.04, 0.02, np.deg2rad(20)]),
+        )
 
     def get_contact(self, data: mjx.Data) -> jax.Array:
-
-
-        # contact = jp.array(
-        #     [
-        #         geoms_colliding(data, geom_id, self._floor_geom_id)
-        #         for geom_id in self._feet_geom_id
-        #     ]
-        # )
 
         left_contacts = jp.array(
             [
@@ -301,8 +286,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         ctrl = self.get_actuator_joints_qpos(qpos)
         # print(f'DEBUG4 ctrl: {ctrl}')
         data = mjx_env.init(self.mjx_model, qpos=qpos, qvel=qvel, ctrl=ctrl)
-        rng, cmd_rng = jax.random.split(rng)
-        cmd = self.sample_command(cmd_rng)
+        rng, _ = jax.random.split(rng)
 
         # Sample push interval.
         rng, push_rng = jax.random.split(rng)
@@ -314,16 +298,13 @@ class Joystick(sigmaban_base.SigmabanEnv):
         push_interval_steps = jp.round(push_interval / self.dt).astype(jp.int32)
 
         if USE_IMITATION_REWARD:
-            current_reference_motion = self.PRM.get_reference_motion(
-                cmd[0], cmd[1], cmd[2], 0
-            )
+            current_reference_motion = self.PRM.get_reference_motion(0.0, 0.0, 0.0, 0)
         else:
             current_reference_motion = jp.zeros(0)
 
         info = {
             "rng": rng,
             "step": 0,
-            "command": cmd,
             "last_act": jp.zeros(self.mjx_model.nu),
             "last_last_act": jp.zeros(self.mjx_model.nu),
             "last_last_last_act": jp.zeros(self.mjx_model.nu),
@@ -344,6 +325,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
             "imitation_i": 0,
             "current_reference_motion": current_reference_motion,
             "imitation_phase": jp.zeros(2),
+            "current_target_vel": [0.0, 0.0, 0.0],
         }
 
         metrics = {}
@@ -355,7 +337,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
                     metrics[f"cost/{k}"] = jp.zeros(())
         metrics["swing_peak"] = jp.zeros(())
 
-
         # contact = jp.array(
         #     [
         #         geoms_colliding(data, geom_id, self._floor_geom_id)
@@ -365,12 +346,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         contact = self.get_contact(data)
 
-        self.TR.sample_trajectory(
-            jp.array([0.0, 0.15 / 2, 0.0]),
-            "left",
-            jp.array([1.0, 1.0 / 2, 0.0]),
-            "left",
-        )
+        self.target = jp.array(np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]))
+        self.FW.target = self.target
+        self.FW.feet.support_foot = "right"
 
         obs = self._get_obs(data, info, contact)
         reward, done = jp.zeros(2)
@@ -399,14 +377,52 @@ class Joystick(sigmaban_base.SigmabanEnv):
             )
 
             state.info["current_reference_motion"] = self.PRM.get_reference_motion(
-                state.info["command"][0],
-                state.info["command"][1],
-                state.info["command"][2],
+                0.0,
+                0.0,
+                0.0,
                 state.info["imitation_i"],
             )
         else:
             state.info["imitation_i"] = 0
             state.info["current_reference_motion"] = jp.zeros(0)
+
+        # switch = (
+        #     state.info["imitation_i"] == self.PRM.nb_steps_in_period // 2
+        #     or state.info["imitation_i"] == 0
+        # )
+
+        switch = jp.logical_or(
+            state.info["imitation_i"] == self.PRM.nb_steps_in_period // 2,
+            state.info["imitation_i"] == 0
+        )
+
+        if switch:
+            (
+                projected_left_foot_pos,
+                projected_left_foot_theta,
+                projected_left_foot_mat,
+            ) = self.get_projected_foot("left")
+            (
+                projected_right_foot_pos,
+                projected_right_foot_theta,
+                projected_right_foot_mat,
+            ) = self.get_projected_foot("right")
+
+            if self.FW.feet.support_foot == "left":
+                projected_support_foot_pos = projected_left_foot_pos
+                projected_support_foot_theta = projected_left_foot_theta
+                projected_support_foot_mat = projected_left_foot_mat
+            else:
+                projected_support_foot_pos = projected_right_foot_pos
+                projected_support_foot_theta = projected_right_foot_theta
+                projected_support_foot_mat = projected_right_foot_mat
+
+            self.FW.feet.foot[self.FW.feet.support_foot] = [
+                projected_support_foot_pos[0],
+                projected_support_foot_pos[1],
+                projected_support_foot_theta,
+            ]
+            self.FW.step()
 
         state.info["rng"], push1_rng, push2_rng, action_delay_rng = jax.random.split(
             state.info["rng"], 4
@@ -507,12 +523,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         state.info["last_last_act"] = state.info["last_act"]
         state.info["last_act"] = action  # was
         # state.info["last_act"] = motor_targets  # became
-        state.info["rng"], cmd_rng = jax.random.split(state.info["rng"])
-        state.info["command"] = jp.where(
-            state.info["step"] > 500,
-            self.sample_command(cmd_rng),
-            state.info["command"],
-        )
+        state.info["rng"], _ = jax.random.split(state.info["rng"])
         state.info["step"] = jp.where(
             done | (state.info["step"] > 500),
             0,
@@ -521,6 +532,8 @@ class Joystick(sigmaban_base.SigmabanEnv):
         state.info["feet_air_time"] *= ~contact
         state.info["last_contact"] = contact
         state.info["swing_peak"] *= ~contact
+        state.info["current_target_vel"] = [0.0, 0.0, 0.0]  # TODO
+
         for k, v in rewards.items():
             rew_scale = self._config.reward_config.scales[k]
             if rew_scale != 0:
@@ -619,12 +632,19 @@ class Joystick(sigmaban_base.SigmabanEnv):
         #     * self._config.noise_config.scales.linvel
         # )
 
+        # TODO
+        _support_foot = self.FW.feet.support_foot
+        _support_foot = 0 if _support_foot == "left" else 1
+        support_foot = jp.array([_support_foot])
+        target_swing_foot_pos = jp.array(self.FW.feet.foot[self.FW.feet.get_other_foot()])
+
         state = jp.hstack(
             [
                 # linvel,
                 noisy_gyro,  # 3
                 noisy_accelerometer,  # 3
-                info["command"],  # 7
+                support_foot,  # 1
+                target_swing_foot_pos,  #  3
                 noisy_joint_angles - self._default_actuator,  # 20
                 noisy_joint_vel * self._config.dof_vel_scale,  # 20
                 info["last_act"],  # 20
@@ -679,17 +699,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         del metrics  # Unused.
 
         ret = {
-            "tracking_lin_vel": reward_tracking_lin_vel(
-                info["command"],
-                self.get_local_linvel(data),
-                self._config.reward_config.tracking_sigma,
-            ),
-            "tracking_ang_vel": reward_tracking_ang_vel(
-                info["command"],
-                self.get_gyro(data),
-                self._config.reward_config.tracking_sigma,
-            ),
-            # "orientation": cost_orientation(self.get_gravity(data)),
             "torques": cost_torques(data.actuator_force),
             "action_rate": cost_action_rate(action, info["last_act"]),
             "alive": reward_alive(),
@@ -700,78 +709,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
                 self.get_actuator_joints_qvel(data.qvel),
                 contact,
                 info["current_reference_motion"],
-                info["command"],
+                info["current_target_vel"],
                 USE_IMITATION_REWARD,
             ),
-            "stand_still": cost_stand_still(
-                # info["command"], data.qpos[7:], data.qvel[6:], self._default_pose
-                info["command"],
-                self.get_actuator_joints_qpos(data.qpos),
-                self.get_actuator_joints_qvel(data.qvel),
-                self._default_actuator,
-                ignore_head=False,
-            ),
-            # "head_pos": cost_head_pos(
-            #     self.get_actuator_joints_qpos(data.qpos),
-            #     self.get_actuator_joints_qvel(data.qvel),
-            #     info["command"],
-            # ),
         }
 
         return ret
-
-    def sample_command(self, rng: jax.Array) -> jax.Array:
-        rng1, rng2, rng3, rng4, rng5, rng6, rng7, rng8 = jax.random.split(rng, 8)
-
-        lin_vel_x = jax.random.uniform(
-            rng1, minval=self._config.lin_vel_x[0], maxval=self._config.lin_vel_x[1]
-        )
-        lin_vel_y = jax.random.uniform(
-            rng2, minval=self._config.lin_vel_y[0], maxval=self._config.lin_vel_y[1]
-        )
-        ang_vel_yaw = jax.random.uniform(
-            rng3,
-            minval=self._config.ang_vel_yaw[0],
-            maxval=self._config.ang_vel_yaw[1],
-        )
-
-        neck_pitch = jax.random.uniform(
-            rng5,
-            minval=self._config.neck_pitch_range[0] * self._config.head_range_factor,
-            maxval=self._config.neck_pitch_range[1] * self._config.head_range_factor,
-        )
-
-        head_pitch = jax.random.uniform(
-            rng6,
-            minval=self._config.head_pitch_range[0] * self._config.head_range_factor,
-            maxval=self._config.head_pitch_range[1] * self._config.head_range_factor,
-        )
-
-        head_yaw = jax.random.uniform(
-            rng7,
-            minval=self._config.head_yaw_range[0] * self._config.head_range_factor,
-            maxval=self._config.head_yaw_range[1] * self._config.head_range_factor,
-        )
-
-        head_roll = jax.random.uniform(
-            rng8,
-            minval=self._config.head_roll_range[0] * self._config.head_range_factor,
-            maxval=self._config.head_roll_range[1] * self._config.head_range_factor,
-        )
-
-        # With 10% chance, set everything to zero.
-        return jp.where(
-            jax.random.bernoulli(rng4, p=0.1),
-            jp.zeros(7),
-            jp.hstack(
-                [
-                    lin_vel_x,
-                    lin_vel_y,
-                    ang_vel_yaw,
-                    neck_pitch,
-                    head_pitch,
-                    head_yaw,
-                    head_roll,
-                ]
-            ),
-        )

@@ -29,11 +29,7 @@ class Feet:
         self.feet_spacing = feet_spacing
         self.foot = {}
         self.foot["left"] = jp.array(init_pos)  # x, y, theta
-        right_foot_init_pos = jp.array(init_pos)
-        right_foot_init_pos = right_foot_init_pos.at[1].set(
-            right_foot_init_pos[1] - self.feet_spacing
-        )
-        self.foot["right"] = jp.array(right_foot_init_pos)  # x, y, theta
+        self.foot["right"] = jp.array(init_pos)  # x, y, theta
 
         self.support_foot = starting_support_foot
         self.left_foot_color = [0, 0, 0, 0.5]
@@ -57,14 +53,7 @@ class Feet:
     def move_swing_foot(self, displacement):
         x, y, theta = displacement
         T_neutral_target = jp.eye(3)
-        # T_neutral_target[0:2, 2] = [x, y]
         T_neutral_target = T_neutral_target.at[:2, 2].set(jp.array([x, y]))
-        # T_neutral_target[0:2, 0:2] = jp.array(
-        #     [
-        #         [jp.cos(theta), -jp.sin(theta)],
-        #         [jp.sin(theta), jp.cos(theta)],
-        #     ]
-        # )
         T_neutral_target = T_neutral_target.at[:2, :2].set(
             jp.array(
                 [
@@ -77,13 +66,9 @@ class Feet:
 
         T_world_other = T_world_neutral @ T_neutral_target
 
-        # self.foot[self.get_other_foot()][:2] = T_world_other[0:2, 2]
         self.foot[self.get_other_foot()] = (
             self.foot[self.get_other_foot()].at[:2].set(T_world_other[0:2, 2])
         )
-        # self.foot[self.get_other_foot()][2] = jp.arctan2(
-        #     T_world_other[1, 0], T_world_other[0, 0]
-        # )
         self.foot[self.get_other_foot()] = (
             self.foot[self.get_other_foot()]
             .at[2]
@@ -92,23 +77,9 @@ class Feet:
 
     def get_T_world_support(self):
         T_world_support = jp.eye(3)
-        # T_world_support[0:2, 2] = self.foot[self.support_foot][0:2]
         T_world_support = T_world_support.at[:2, 2].set(
             self.foot[self.support_foot][:2]
         )
-
-        # T_world_support[0:2, 0:2] = jp.array(
-        #     [
-        #         [
-        #             jp.cos(self.foot[self.support_foot][2]),
-        #             -jp.sin(self.foot[self.support_foot][2]),
-        #         ],
-        #         [
-        #             jp.sin(self.foot[self.support_foot][2]),
-        #             jp.cos(self.foot[self.support_foot][2]),
-        #         ],
-        #     ]
-        # )
 
         T_world_support = T_world_support.at[:2, :2].set(
             jp.array(
@@ -168,7 +139,6 @@ class Feet:
     def get_T_world_neutral(self):
         offset_sign = 1 if self.support_foot == "right" else -1
         T_support_neutral = jp.eye(3)
-        # T_support_neutral[0:2, 2] = [0, offset_sign * self.feet_spacing]
         T_support_neutral = T_support_neutral.at[:2, 2].set(
             jp.array([0, offset_sign * self.feet_spacing])
         )
@@ -204,8 +174,8 @@ class FootstepnetWrapper:
         init_support_foot="left",
         init_target=[0.0, 0.0, 0.0],
         init_target_support_foot="left",
-        action_low = jp.array([-0.08, -0.04, jp.deg2rad(-20)]),
-        action_high = jp.array([0.08, 0.04, jp.deg2rad(20)])
+        action_low=jp.array([-0.08, -0.04, jp.deg2rad(-20)]),
+        action_high=jp.array([0.08, 0.04, jp.deg2rad(20)]),
     ):
         self.policy = OnnxInfer(
             model_path,
@@ -222,9 +192,6 @@ class FootstepnetWrapper:
         obs = self.get_obs()
         action = self.policy.infer(obs)
         if self.feet.support_foot == "left":
-            # action[1] = -action[1]
-            # action[2] = -action[2]
-
             action = action.at[1].set(-action[1])
             action = action.at[2].set(-action[2])
 
@@ -273,7 +240,6 @@ class FootstepnetWrapper:
         T_support_world = jp.linalg.inv(T_world_support)
 
         T_world_target = jp.eye(3)
-        # T_world_target[0:2, 2] = self.target[0:2]
         T_world_target = T_world_target.at[:2, 2].set(self.target[:2])
         T_world_target = T_world_target.at[:2, :2].set(
             jp.array(
@@ -283,12 +249,7 @@ class FootstepnetWrapper:
                 ]
             )
         )
-        # T_world_target[0:2, 0:2] = jp.array(
-        #     [
-        #         [jp.cos(self.target[2]), -jp.sin(self.target[2])],
-        #         [jp.sin(self.target[2]), jp.cos(self.target[2])],
-        #     ]
-        # )
+
         T_support_target = T_support_world @ T_world_target
         support_target = jp.array(
             [
@@ -310,9 +271,6 @@ class FootstepnetWrapper:
         # Handling symmetry
         if self.feet.support_foot == "left":
             # Invert the target foot position and orientation for the other foot
-            # support_target[1] = -support_target[1]
-            # support_target[3] = -support_target[3]
-
             support_target = support_target.at[1].set(-support_target[1])
             support_target = support_target.at[3].set(-support_target[3])
 
@@ -360,6 +318,7 @@ class Trajectory:
         self.trajectory = []
         self.time_between_steps = dt * nb_steps_in_period
         self.world_velocities = []
+        self.current_step = 0
 
     def sample_trajectory(
         self, starting_pos, starting_support_foot, target, target_support_foot
@@ -403,6 +362,13 @@ class Trajectory:
 
     def clear(self):
         self.trajectory = []
+
+    def capture(self):
+        self.current_step += 1
+
+    def get_current_step(self):
+        # returns in world coordinates
+        return self.trajectory[self.current_step]
 
     def render(self, scene):
         for i, feet in enumerate(self.trajectory):

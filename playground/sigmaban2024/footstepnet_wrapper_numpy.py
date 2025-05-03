@@ -26,9 +26,12 @@ class Feet:
         self.feet_spacing = feet_spacing
         self.foot = {}
         self.foot["left"] = np.array(init_pos)  # x, y, theta
-        right_foot_init_pos = np.array(init_pos)
-        right_foot_init_pos[1] -= self.feet_spacing
-        self.foot["right"] = np.array(right_foot_init_pos)  # x, y, theta
+        # It actually doesn't matter where the right foot is initialized
+        # The "other" foot will be computed from the support foot (through neutral position)
+        self.foot["right"] = np.array(init_pos)  # x, y, theta
+        # right_foot_init_pos = np.array(init_pos)
+        # right_foot_init_pos[1] -= self.feet_spacing
+        # self.foot["right"] = np.array(right_foot_init_pos)  # x, y, theta
 
         self.support_foot = starting_support_foot
 
@@ -307,12 +310,21 @@ class FootstepnetWrapper:
 
 
 class Trajectory:
-    def __init__(self, model_path, nb_steps_in_period=36, dt=0.02):
+    def __init__(
+        self,
+        model_path,
+        nb_steps_in_period=36,
+        dt=0.02,
+        action_low=[-0.08, -0.04, np.deg2rad(-20)],
+        action_high=[0.08, 0.04, np.deg2rad(20)],
+    ):
         self.model_path = model_path
 
         self.trajectory = []
         self.time_between_steps = dt * nb_steps_in_period
         self.world_velocities = []
+        self.action_low = action_low
+        self.action_high = action_high
 
     def sample_trajectory(
         self, starting_pos, starting_support_foot, target, target_support_foot
@@ -328,6 +340,8 @@ class Trajectory:
             init_support_foot=starting_support_foot,
             init_target=target,
             init_target_support_foot=target_support_foot,
+            action_low=self.action_low,
+            action_high=self.action_high,
         )
 
         prev_pos = starting_pos

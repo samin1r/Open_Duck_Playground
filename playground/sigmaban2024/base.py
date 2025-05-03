@@ -20,6 +20,7 @@ from typing import Any, Dict, Optional, Union
 from etils import epath
 import jax
 import jax.numpy as jp
+import numpy as np
 from ml_collections import config_dict
 import mujoco
 from mujoco import mjx
@@ -271,6 +272,39 @@ class SigmabanEnv(mjx_env.MjxEnv):
                 for sensor_name in constants.FEET_POS_SENSOR
             ]
         )
+
+    def get_projected_foot(self, foot="left"):
+        if foot not in ["left", "right"]:
+            raise ValueError("foot must be 'left' or 'right'")
+        body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
+        )
+        pos = self.data.xpos[body_id]  # np.array([x, y, z])
+
+        offset = [0.14 / 2, -0.08 / 2, 0.0]
+        mat = self.data.xmat[body_id].reshape(3, 3)  # rotation matrix
+
+        # project pos on the ground
+        pos[2] = 0.001
+
+        # cancel all rotation except z
+        theta = np.arctan2(mat[1, 0], mat[0, 0])
+
+        # Build a pure yaw rotation matrix
+        mat = np.array(
+            [
+                [np.cos(theta), -np.sin(theta), 0],
+                [np.sin(theta), np.cos(theta), 0],
+                [0, 0, 1],
+            ]
+        )
+
+        # apply the offset to the position resulting from the rotation
+        # the offset is in the local frame of the left foot
+        offset_world = mat @ offset
+        pos += offset_world
+
+        return jp.array(pos), theta, jp.array(mat)
 
     # Accessors.
 

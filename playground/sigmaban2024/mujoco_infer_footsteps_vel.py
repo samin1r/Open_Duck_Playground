@@ -9,7 +9,7 @@ from playground.common.onnx_infer import OnnxInfer
 from playground.common.poly_reference_motion_numpy import PolyReferenceMotion
 
 from playground.sigmaban2024.mujoco_infer_base import MJInferBase
-from playground.sigmaban2024.footstepnet_wrapper_numpy import FootstepnetWrapper
+from playground.sigmaban2024.footstepnet_wrapper_numpy import Trajectory
 from playground.common.utils import render_plane
 
 USE_MOTOR_SPEED_LIMITS = False
@@ -64,14 +64,18 @@ class MjInfer(MJInferBase):
         print(f"backlash joint names: {self.backlash_joint_names}")
         # print(f"actual joints idx: {self.get_actual_joints_idx()}")
 
-        self.target = np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi])
-        self.FW = FootstepnetWrapper(
-            model_path="playground/sigmaban2024/data/footsteps-planning-any-v0_actor.onnx",
-            init_target=self.target,
-            init_support_foot="right",
-            # action_low=[-0.04, -0.02, np.deg2rad(-20)],
-            # action_high=[0.04, 0.02, np.deg2rad(20)],
+        self.TR = Trajectory(
+            model_path="playground/sigmaban2024/data/footsteps-planning-any-v0_actor.onnx"
         )
+
+        self.TR.sample_trajectory(
+            [0.0, 0.15 / 2, 0.0],
+            "left",
+            np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]),
+            "left",
+        )
+        self.trajectory_i = 0
+        # self.commands[:3] = self.TR.velocities[self.trajectory_i]
 
     def get_feet_contacts(self, data):
         left_foot_cleat_back_left = self.check_contact(
@@ -150,41 +154,10 @@ class MjInfer(MJInferBase):
 
         return obs
 
-    def world_vel_to_local_vel(self, world_vel, theta):
-        # Extract linear and angular parts
-        linear_vel_world = world_vel[:2]  # [vx, vy]
-        angular_vel_world = world_vel[2]  # omega (yaw rate)
-
-        # Rotation matrix to rotate from world to local frame (2D)
-        rot_inv_2d = np.array(
-            [
-                [np.cos(theta), np.sin(theta)],
-                [-np.sin(theta), np.cos(theta)],
-            ]
-        )
-
-        # Rotate linear velocity
-        linear_vel_local = rot_inv_2d @ linear_vel_world
-
-        # Angular velocity stays the same
-        angular_vel_local = angular_vel_world
-
-        # Combine
-        local_vel = np.hstack((linear_vel_local, angular_vel_local))
-        return local_vel
-
-    def get_root_theta(self):
-        body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, f"torso_2023")
-        mat = self.data.xmat[body_id].reshape(3, 3)  # rotation matrix
-        theta = np.arctan2(mat[1, 0], mat[0, 0])
-        return theta
-
     def get_projected_foot(self, foot="left"):
         if foot not in ["left", "right"]:
             raise ValueError("foot must be 'left' or 'right'")
-        body_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
-        )
+        body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2")
         pos = self.data.xpos[body_id]  # np.array([x, y, z])
 
         offset = [0.14 / 2, -0.08 / 2, 0.0]
@@ -212,8 +185,18 @@ class MjInfer(MJInferBase):
 
         return pos, theta, mat
 
+    def project_left_foot(self, scene, pos, mat):
+
+        render_plane(
+            scene,
+            pos,
+            mat,
+            [0.14, 0.08],
+            [1, 0, 0, 0.5],
+        )
+
     def key_callback(self, keycode):
-        # return 0
+        return 0
         print(f"key: {keycode}")
         lin_vel_x = 0
         lin_vel_y = 0
@@ -261,6 +244,10 @@ class MjInfer(MJInferBase):
                     if counter % self.decimation == 0:
                         viewer.user_scn.ngeom = 0  # Clear previous custom geometries
 
+                        left_foot_pos, left_foot_theta, left_foot_mat = (
+                            self.get_projected_foot("left")
+                        )
+
                         self.imitation_i += 1.0 * self.phase_frequency_factor
                         self.imitation_i = (
                             self.imitation_i % self.PRM.nb_steps_in_period
@@ -283,43 +270,56 @@ class MjInfer(MJInferBase):
                                 ),
                             ]
                         )
-
-                        # switch = np.sign(self.imitation_phase[0]) != np.sign(
-                        #     self.prev_imitation_phase[0]
-                        # )
-                        switch = (
-                            self.imitation_i == self.PRM.nb_steps_in_period // 2
-                            or self.imitation_i == 0
+                        switch = np.sign(self.imitation_phase[0]) != np.sign(
+                            self.prev_imitation_phase[0]
                         )
-
-                        (
-                            projected_left_foot_pos,
-                            projected_left_foot_theta,
-                            projected_left_foot_mat,
-                        ) = self.get_projected_foot("left")
-                        (
-                            projected_right_foot_pos,
-                            projected_right_foot_theta,
-                            projected_right_foot_mat,
-                        ) = self.get_projected_foot("right")
                         if switch:
-                            if self.FW.feet.support_foot == "left":
-                                projected_support_foot_pos = projected_left_foot_pos
-                                projected_support_foot_theta = projected_left_foot_theta
-                                projected_support_foot_mat = projected_left_foot_mat
-                            else:
-                                projected_support_foot_pos = projected_right_foot_pos
-                                projected_support_foot_theta = (
-                                    projected_right_foot_theta
+                            if self.trajectory_i >= len(self.TR.world_velocities) - 1:
+                                pos = [
+                                    left_foot_pos[0],
+                                    left_foot_pos[1],
+                                    left_foot_theta,
+                                ]
+                                self.TR.sample_trajectory(
+                                    pos,
+                                    "left",
+                                    np.random.uniform([-2, -2, -np.pi], [2, 2, np.pi]),
+                                    "left",
                                 )
-                                projected_support_foot_mat = projected_right_foot_mat
+                                self.trajectory_i = 0
+                            else:
+                                self.trajectory_i += 1
 
-                            self.FW.feet.foot[self.FW.feet.support_foot] = [
-                                projected_support_foot_pos[0],
-                                projected_support_foot_pos[1],
-                                projected_support_foot_theta,
+                            # # [lin_vel_x, lin_vel_y, ang_vel]
+                            world_velocities = self.TR.world_velocities[
+                                self.trajectory_i
                             ]
-                            self.FW.step()
+
+                            theta = left_foot_theta
+                            # Extract linear and angular parts
+                            linear_vel_world = world_velocities[:2]  # [vx, vy]
+                            angular_vel_world = world_velocities[2]  # omega (yaw rate)
+
+                            # Rotation matrix to rotate from world to local frame (2D)
+                            rot_inv_2d = np.array(
+                                [
+                                    [np.cos(theta), np.sin(theta)],
+                                    [-np.sin(theta), np.cos(theta)],
+                                ]
+                            )
+
+                            # Rotate linear velocity
+                            linear_vel_local = rot_inv_2d @ linear_vel_world
+
+                            # Angular velocity stays the same
+                            angular_vel_local = angular_vel_world
+
+                            # Combine
+                            local_velocities = np.hstack(
+                                (linear_vel_local, angular_vel_local)
+                            )
+
+                            self.commands[:3] = local_velocities
 
                         obs = self.get_obs(
                             self.data,
@@ -353,23 +353,13 @@ class MjInfer(MJInferBase):
                         # self.motor_targets[5:9] = head_targets
                         self.data.ctrl = self.motor_targets.copy()
 
-                        self.FW.render(viewer.user_scn)
+                        self.project_left_foot(
+                            viewer.user_scn, left_foot_pos, left_foot_mat
+                        )
 
-                        # Draw the position of the feet projected on the ground
-                        # render_plane(
-                        #     viewer.user_scn,
-                        #     projected_left_foot_pos,
-                        #     projected_left_foot_mat,
-                        #     [0.14, 0.08],
-                        #     [1, 0, 0, 0.5],
-                        # )
-                        # render_plane(
-                        #     viewer.user_scn,
-                        #     projected_right_foot_pos,
-                        #     projected_right_foot_mat,
-                        #     [0.14, 0.08],
-                        #     [1, 0, 0, 0.5],
-                        # )
+                        self.TR.render(
+                            viewer.user_scn,
+                        )
 
                     viewer.sync()
 
