@@ -42,7 +42,7 @@ class MjInfer(MJInferBase):
         self.COMMANDS_RANGE_THETA = [-1.0, 1.0]  # [-1.0, 1.0]
 
         self.NECK_PITCH_RANGE = [-0.34, 1.1]
-        self.HEAD_PITCH_RANGE = [-0.78, 0.78]
+        self.HEAD_PITCH_RANGE = [-0.78, 0.3]
         self.HEAD_YAW_RANGE = [-1.5, 1.5]
         self.HEAD_ROLL_RANGE = [-0.5, 0.5]
 
@@ -132,9 +132,9 @@ class MjInfer(MJInferBase):
             head_yaw = 0
             head_roll = 0
             if keycode == 265:  # arrow up
-                head_pitch = self.NECK_PITCH_RANGE[1]
+                head_pitch = self.HEAD_PITCH_RANGE[1]
             if keycode == 264:  # arrow down
-                head_pitch = self.NECK_PITCH_RANGE[0]
+                head_pitch = self.HEAD_PITCH_RANGE[0]
             if keycode == 263:  # arrow left
                 head_yaw = self.HEAD_YAW_RANGE[1]
             if keycode == 262:  # arrow right
