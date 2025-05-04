@@ -71,7 +71,7 @@ class MjInfer(MJInferBase):
     ):
         gyro = self.get_gyro(data)
         accelerometer = self.get_accelerometer(data)
-        accelerometer[0] += 1.3
+        # accelerometer[0] += 1.3
 
         joint_angles = self.get_actuator_joints_qpos(data.qpos)
         joint_vel = self.get_actuator_joints_qvel(data.qvel)
@@ -173,7 +173,8 @@ class MjInfer(MJInferBase):
 
                     if counter % self.decimation == 0:
                         if not self.standing:
-                            self.imitation_i += 1.0 * self.phase_frequency_factor
+                            if np.linalg.norm(self.commands[:3]) > 0.01:
+                                self.imitation_i += 1.0 * self.phase_frequency_factor
                             self.imitation_i = (
                                 self.imitation_i % self.PRM.nb_steps_in_period
                             )

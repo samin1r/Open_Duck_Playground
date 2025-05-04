@@ -323,7 +323,8 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
 
         if USE_IMITATION_REWARD:
-            state.info["imitation_i"] += 1
+            if jp.linalg.norm(state.info["command"][:3]) > 0.01:
+                state.info["imitation_i"] += 1
             state.info["imitation_i"] = (
                 state.info["imitation_i"] % self.PRM.nb_steps_in_period
             )  # not critical, is already moduloed in get_reference_motion
@@ -499,7 +500,7 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
 
         accelerometer = self.get_accelerometer(data)
         # accelerometer[0] += 1.3 # TODO testing
-        accelerometer.at[0].set(accelerometer[0] + 1.3)
+        # accelerometer.at[0].set(accelerometer[0] + 1.3)
 
         info["rng"], noise_rng = jax.random.split(info["rng"])
         noisy_accelerometer = (
