@@ -484,9 +484,14 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
         fall_termination = self.get_gravity(data)[-1] < 0.0
         return fall_termination | jp.isnan(data.qpos).any() | jp.isnan(data.qvel).any()
 
+    # TODO SAC
+    # def _get_obs(
+    #     self, data: mjx.Data, info: dict[str, Any], contact: jax.Array
+    # ) -> mjx_env.Observation:
+
     def _get_obs(
         self, data: mjx.Data, info: dict[str, Any], contact: jax.Array
-    ) -> mjx_env.Observation:
+    ) -> jax.Array:
 
         gyro = self.get_gyro(data)
         info["rng"], noise_rng = jax.random.split(info["rng"])
@@ -614,10 +619,11 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
             ]
         )
 
-        return {
-            "state": state,
-            "privileged_state": privileged_state,
-        }
+        return state # TODO SAC
+        # return {
+        #     "state": state,
+        #     "privileged_state": privileged_state,
+        # }
 
     def _get_reward(
         self,

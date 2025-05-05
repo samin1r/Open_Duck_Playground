@@ -13,12 +13,14 @@ from tensorboardX import SummaryWriter
 
 import os
 from brax.training.agents.ppo import networks as ppo_networks, train as ppo
+from brax.training.agents.sac import networks as sac_networks, train as sac
 from mujoco_playground import wrapper
 from mujoco_playground.config import locomotion_params
 from orbax import checkpoint as ocp
 import jax
 
 from playground.common.export_onnx import export_onnx
+from mujoco_playground.config import dm_control_suite_params
 
 
 class BaseRunner(ABC):
@@ -41,7 +43,8 @@ class BaseRunner(ABC):
         self.obs_size = None
         self.num_timesteps = args.num_timesteps
         self.restore_checkpoint_path = None
-        
+        self.algo = args.algo
+
         # CACHE STUFF
         os.makedirs(".tmp", exist_ok=True)
         jax.config.update("jax_compilation_cache_dir", ".tmp/jax_cache")
@@ -80,36 +83,54 @@ class BaseRunner(ABC):
             self.action_size,
             self.ppo_params,
             self.obs_size,  # may not work
-            output_path=onnx_export_path
+            output_path=onnx_export_path,
         )
 
     def train(self) -> None:
-        self.ppo_params = locomotion_params.brax_ppo_config(
-            "BerkeleyHumanoidJoystickFlatTerrain"
-        )  # TODO
-        self.ppo_training_params = dict(self.ppo_params)
-        # self.ppo_training_params["num_timesteps"] = 150000000 * 20
-        
 
-        if "network_factory" in self.ppo_params:
-            network_factory = functools.partial(
-                ppo_networks.make_ppo_networks, **self.ppo_params.network_factory
-            )
-            del self.ppo_training_params["network_factory"]
+        if self.algo == "ppo":
+            self.algo_params = locomotion_params.brax_ppo_config(
+                "BerkeleyHumanoidJoystickFlatTerrain"
+            )  # TODO
+        elif self.algo == "sac":
+            self.algo_params = dm_control_suite_params.brax_sac_config("HumanoidWalk")
         else:
-            network_factory = ppo_networks.make_ppo_networks
-        self.ppo_training_params["num_timesteps"] = self.num_timesteps
-        print(f"PPO params: {self.ppo_training_params}")
+            raise ValueError(f"Unknown algorithm {self.algo}")
+
+        self.algo_training_params = dict(self.algo_params)
+
+        if "network_factory" in self.algo_params:
+            if self.algo == "ppo":
+                network_factory = functools.partial(
+                    ppo_networks.make_ppo_networks, **self.algo_params.network_factory
+                )
+            else:
+                network_factory = functools.partial(
+                    sac_networks.make_sac_networks, **self.algo_params.network_factory
+                )
+
+            del self.algo_training_params["network_factory"]
+
+        else:
+            if self.algo == "ppo":
+                network_factory = ppo_networks.make_ppo_networks
+            else:
+                network_factory = sac_networks.make_sac_networks
+
+        self.algo_training_params["num_timesteps"] = self.num_timesteps
+        print(f"{self.algo} params: {self.algo_training_params}")
+
+        algo = ppo if self.algo == "ppo" else sac
 
         train_fn = functools.partial(
-            ppo.train,
-            **self.ppo_training_params,
+            algo.train,
+            **self.algo_training_params,
             network_factory=network_factory,
             randomization_fn=self.randomizer,
             progress_fn=self.progress_callback,
-            policy_params_fn=self.policy_params_fn,
-            restore_checkpoint_path=self.restore_checkpoint_path,
-        )
+            # policy_params_fn=self.policy_params_fn,
+            # restore_checkpoint_path=self.restore_checkpoint_path,
+        ) # TODO SAC
 
         _, params, _ = train_fn(
             environment=self.env,

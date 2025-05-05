@@ -25,9 +25,16 @@ class OpenDuckMiniV2Runner(BaseRunner):
         self.eval_env = self.env_file[1](task=args.task)
         self.randomizer = randomize.domain_randomize
         self.action_size = self.env.action_size
-        self.obs_size = int(
-            self.env.observation_size["state"][0]
-        )  # 0: state 1: privileged_state
+        if args.algo == "ppo":
+            self.obs_size = int(
+                self.env.observation_size["state"][0]
+            )  # 0: state 1: privileged_state
+        elif args.algo == "sac":
+            self.obs_size = int(
+                self.env.observation_size
+            )  # 0: state 1: privileged_state
+        else:
+            raise ValueError(f"Unknown algo {args.algo}")
         self.restore_checkpoint_path = args.restore_checkpoint_path
         print(f"Observation size: {self.obs_size}")
 
@@ -49,6 +56,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Resume training from this checkpoint",
+    )
+    parser.add_argument(
+        "--algo",
+        type=str,
+        default="ppo",
+        help="Algorithm to use for training (ppo or sac)",
     )
     # parser.add_argument(
     #     "--debug", action="store_true", help="Run in debug mode with minimal parameters"
