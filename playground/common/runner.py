@@ -130,6 +130,7 @@ class BaseRunner(ABC):
             progress_fn=self.progress_callback,
             # policy_params_fn=self.policy_params_fn,
             # restore_checkpoint_path=self.restore_checkpoint_path,
+            checkpoint_logdir="./checkpoints",
         ) # TODO SAC
 
         _, params, _ = train_fn(
