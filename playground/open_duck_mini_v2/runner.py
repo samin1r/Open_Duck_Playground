@@ -56,10 +56,6 @@ class OpenDuckMiniV2Runner(BaseRunner):
             mean = params[0].mean
             std = params[0].std
             policy_params = params[1]["params"]
-
-            # from brax.training.agents.sac.train import TrainingState
-
-            # training_state = TrainingState
             export_onnx(
                 mean,
                 std,

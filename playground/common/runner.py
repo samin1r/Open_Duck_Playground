@@ -4,6 +4,7 @@ Inspired from https://github.com/kscalelabs/mujoco_playground/blob/master/playgr
 """
 
 from pathlib import Path
+from ml_collections import config_dict
 from abc import ABC
 import argparse
 import functools
@@ -21,6 +22,7 @@ import jax
 
 from playground.common.export_onnx import export_onnx
 from mujoco_playground.config import dm_control_suite_params
+from flax import linen
 
 
 class BaseRunner(ABC):
@@ -51,6 +53,24 @@ class BaseRunner(ABC):
             )  # TODO
         elif self.algo == "sac":
             self.algo_params = dm_control_suite_params.brax_sac_config("HumanoidWalk")
+
+            # Matching the params of brax ppo from locomotion_params.py
+            self.algo_params.discounting = 0.97
+            self.algo_params.learning_rate = 3e-4
+            self.algo_params.batch_size = 256
+            self.algo_params.num_evals = 15
+            self.algo_params.clipping_epsilon = 0.2
+            self.algo_params.num_resets_per_eval = 1
+            self.algo_params.entropy_cost = 0.005
+            self.algo_params.network_factory = config_dict.create(
+                q_network_layer_norm=True,
+                hidden_layer_sizes=(512, 256, 128),
+                activation=linen.swish,
+                # value_hidden_layer_sizes=(512, 256, 128),
+                # policy_obs_key="state",
+                # value_obs_key="privileged_state",
+            )
+
         else:
             raise ValueError(f"Unknown algorithm {self.algo}")
 
