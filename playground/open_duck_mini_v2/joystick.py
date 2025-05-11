@@ -44,6 +44,7 @@ from playground.open_duck_mini_v2.custom_rewards import reward_imitation
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
 USE_IMITATION_REWARD = True
 USE_MOTOR_SPEED_LIMITS = True
+HEAD_MIX = True  # if true, the head joints are mixed with the commands
 
 
 def default_config() -> config_dict.ConfigDict:
@@ -96,7 +97,7 @@ def default_config() -> config_dict.ConfigDict:
         ang_vel_yaw=[-1.0, 1.0],  # [-1.0, 1.0]
         neck_pitch_range=[-0.34, 1.1],
         head_pitch_range=[-0.78, 0.3],
-        head_yaw_range=[-1.5, 1.5],
+        head_yaw_range=[-1.0, 1.0],
         head_roll_range=[-0.5, 0.5],
         head_range_factor=1.0,  # to make it easier
     )
@@ -416,7 +417,10 @@ class Joystick(open_duck_mini_v2_base.OpenDuckMiniV2Env):
                 + self._config.max_motor_velocity * self.dt,  # control dt
             )
 
-        # motor_targets.at[5:9].set(state.info["command"][3:])  # head joints
+        if HEAD_MIX:
+            head_mix = state.info["command"][3:] + motor_targets[5:9]
+            motor_targets.at[5:9].set(head_mix)  # head joints
+
         data = mjx_env.step(self.mjx_model, state.data, motor_targets, self.n_substeps)
 
         state.info["motor_targets"] = motor_targets

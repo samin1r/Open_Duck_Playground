@@ -12,6 +12,7 @@ from playground.common.utils import LowPassActionFilter
 from playground.open_duck_mini_v2.mujoco_infer_base import MJInferBase
 
 USE_MOTOR_SPEED_LIMITS = True
+HEAD_MIX = True  # if true, the head joints are mixed with the commands
 
 
 class MjInfer(MJInferBase):
@@ -43,7 +44,7 @@ class MjInfer(MJInferBase):
 
         self.NECK_PITCH_RANGE = [-0.34, 1.1]
         self.HEAD_PITCH_RANGE = [-0.78, 0.3]
-        self.HEAD_YAW_RANGE = [-1.5, 1.5]
+        self.HEAD_YAW_RANGE = [-1.0, 1.0]
         self.HEAD_ROLL_RANGE = [-0.5, 0.5]
 
         self.last_action = np.zeros(self.num_dofs)
@@ -227,8 +228,10 @@ class MjInfer(MJInferBase):
 
                             self.prev_motor_targets = self.motor_targets.copy()
 
-                        # head_targets = self.commands[3:]
-                        # self.motor_targets[5:9] = head_targets
+                        if HEAD_MIX:
+                            head_mix = self.commands[3:] + self.motor_targets[5:9]
+                            self.motor_targets[5:9] = head_mix
+
                         self.data.ctrl = self.motor_targets.copy()
 
                     viewer.sync()
