@@ -109,11 +109,16 @@ def export_onnx(
     mean_std = (tf.convert_to_tensor(mean), tf.convert_to_tensor(std))
 
     # if ppo:
+    # TODO make this clearer
     tf_policy_network = make_policy_network(
         param_size=act_size * 2,
         mean_std=mean_std,
-        hidden_layer_sizes=algo_params.network_factory.policy_hidden_layer_sizes,
-        activation=tf.nn.swish if ppo else algo_params.network_factory.activation,
+        hidden_layer_sizes=(
+            algo_params.network_factory.policy_hidden_layer_sizes
+            if ppo
+            else algo_params.network_factory.hidden_layer_sizes
+        ),
+        activation=tf.nn.swish,  # if ppo else algo_params.network_factory.activation,
     )
     # else:
     #     # TODO sac uses relu ? shoud use swish no ?

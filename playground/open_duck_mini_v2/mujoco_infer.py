@@ -226,8 +226,8 @@ class MjInfer(MJInferBase):
 
                             self.prev_motor_targets = self.motor_targets.copy()
 
-                        # head_targets = self.commands[3:]
-                        # self.motor_targets[5:9] = head_targets
+                        head_mix = self.commands[3:] + self.motor_targets[5:9]
+                        self.motor_targets[5:9] = head_mix
                         self.data.ctrl = self.motor_targets.copy()
 
                     viewer.sync()

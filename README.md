@@ -95,8 +95,22 @@ Inspired from https://github.com/kscalelabs/mujoco_playground
 - train for 300 000 000 steps
 - train with backlash (takes longer)
 - Flat terrain
-- Infer on the robot with kp = 22 instead of 32
+- Use motor speed limits = True
 
 ## TODO
 - Understand why head does not move very much
 - low pass filter ? 37.5 hz ? 
+
+## (Ongoing) Trying to train with SAC
+
+- Added the option to train with sac instead of ppo
+  - TODO check that I didn't break anything for ppo training / exporting
+- Tried to match the params from ppo, but it's all scattered everything in mujoco playground/brax ...
+- For some reason, the sac training function doesn't allow for a user defined function do stuff like exporting to onnx like we do for ppo. 
+  - So we have to export manually using : 
+
+```
+uv run playground/open_duck_mini_v2/runner.py --task flat_terrain --num_timesteps 10000 --algo sac --export_onnx _sac_9984.pkl  
+``` 
+
+for ex
