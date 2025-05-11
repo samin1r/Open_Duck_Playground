@@ -45,6 +45,17 @@ class BaseRunner(ABC):
         self.restore_checkpoint_path = None
         self.algo = args.algo
 
+        if self.algo == "ppo":
+            self.algo_params = locomotion_params.brax_ppo_config(
+                "BerkeleyHumanoidJoystickFlatTerrain"
+            )  # TODO
+        elif self.algo == "sac":
+            self.algo_params = dm_control_suite_params.brax_sac_config("HumanoidWalk")
+        else:
+            raise ValueError(f"Unknown algorithm {self.algo}")
+
+        self.algo_training_params = dict(self.algo_params)
+
         # CACHE STUFF
         os.makedirs(".tmp", exist_ok=True)
         jax.config.update("jax_compilation_cache_dir", ".tmp/jax_cache")
@@ -78,26 +89,31 @@ class BaseRunner(ABC):
         print(f"Saving checkpoint (step: {current_step}): {path}")
         orbax_checkpointer.save(path, params, force=True, save_args=save_args)
         onnx_export_path = f"{self.output_dir}/{d}_{current_step}.onnx"
+        mean = params[0].mean["state"]
+        std = params[0].std["state"]
+        policy_params = params[1].policy["params"]
         export_onnx(
-            params,
+            mean,
+            std,
+            policy_params,
             self.action_size,
-            self.ppo_params,
+            self.algo_params,
             self.obs_size,  # may not work
             output_path=onnx_export_path,
         )
 
     def train(self) -> None:
 
-        if self.algo == "ppo":
-            self.algo_params = locomotion_params.brax_ppo_config(
-                "BerkeleyHumanoidJoystickFlatTerrain"
-            )  # TODO
-        elif self.algo == "sac":
-            self.algo_params = dm_control_suite_params.brax_sac_config("HumanoidWalk")
-        else:
-            raise ValueError(f"Unknown algorithm {self.algo}")
+        # if self.algo == "ppo":
+        #     self.algo_params = locomotion_params.brax_ppo_config(
+        #         "BerkeleyHumanoidJoystickFlatTerrain"
+        #     )  # TODO
+        # elif self.algo == "sac":
+        #     self.algo_params = dm_control_suite_params.brax_sac_config("HumanoidWalk")
+        # else:
+        #     raise ValueError(f"Unknown algorithm {self.algo}")
 
-        self.algo_training_params = dict(self.algo_params)
+        # self.algo_training_params = dict(self.algo_params)
 
         if "network_factory" in self.algo_params:
             if self.algo == "ppo":
@@ -131,7 +147,7 @@ class BaseRunner(ABC):
             # policy_params_fn=self.policy_params_fn,
             # restore_checkpoint_path=self.restore_checkpoint_path,
             checkpoint_logdir="./checkpoints/",
-        ) # TODO SAC
+        )  # TODO SAC
 
         _, params, _ = train_fn(
             environment=self.env,

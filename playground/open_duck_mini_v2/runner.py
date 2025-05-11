@@ -6,6 +6,9 @@ from playground.common import randomize
 from playground.common.runner import BaseRunner
 from playground.open_duck_mini_v2 import joystick, standing
 
+from playground.common.export_onnx import export_onnx
+from orbax import checkpoint as ocp
+
 
 class OpenDuckMiniV2Runner(BaseRunner):
 
@@ -38,6 +41,36 @@ class OpenDuckMiniV2Runner(BaseRunner):
         self.restore_checkpoint_path = args.restore_checkpoint_path
         print(f"Observation size: {self.obs_size}")
 
+        # TODO specific for sac for now
+        if args.export_onnx is not None:
+            print()
+            print()
+            print()
+            print(f"EXPORTING {args.export_onnx} ONNX")
+
+            pth_path = args.export_onnx
+
+            from brax.io.model import load_params
+
+            params = load_params(pth_path)
+            mean = params[0].mean
+            std = params[0].std
+            policy_params = params[1]["params"]
+
+            # from brax.training.agents.sac.train import TrainingState
+
+            # training_state = TrainingState
+            export_onnx(
+                mean,
+                std,
+                policy_params,
+                self.action_size,
+                self.algo_params,
+                self.obs_size,
+                ppo=True if self.algo == "ppo" else False,
+            )
+            exit()
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Open Duck Mini Runner Script")
@@ -66,6 +99,13 @@ def main() -> None:
     # parser.add_argument(
     #     "--debug", action="store_true", help="Run in debug mode with minimal parameters"
     # )
+    parser.add_argument(
+        "--export_onnx",
+        type=str,
+        default=None,
+        required=False,
+        help="Export .pth to ONNX format",
+    )
     args = parser.parse_args()
 
     runner = OpenDuckMiniV2Runner(args)

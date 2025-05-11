@@ -1,11 +1,25 @@
-
 import tensorflow as tf
 from tensorflow.keras import layers
 import tf2onnx
 import numpy as np
 
+# TODO was :
+# def export_onnx(
+#     params, act_size, algo_params, obs_size, output_path="ONNX.onnx"
+# ):
+
+# Check that it still works with ppo
+
+
 def export_onnx(
-    params, act_size, ppo_params, obs_size, output_path="ONNX.onnx"
+    mean,
+    std,
+    policy_params,
+    act_size,
+    algo_params,
+    obs_size,
+    output_path="ONNX.onnx",
+    ppo=True,
 ):
     print(" === EXPORT ONNX === ")
 
@@ -88,18 +102,27 @@ def export_onnx(
         )
         return policy_network
 
-    mean = params[0].mean["state"]
-    std = params[0].std["state"]
+    # mean = params[0].mean["state"]
+    # std = params[0].std["state"]
 
     # Convert mean/std jax arrays to tf tensors.
     mean_std = (tf.convert_to_tensor(mean), tf.convert_to_tensor(std))
 
-    tf_policy_network = make_policy_network(
-        param_size=act_size * 2,
-        mean_std=mean_std,
-        hidden_layer_sizes=ppo_params.network_factory.policy_hidden_layer_sizes,
-        activation=tf.nn.swish,
-    )
+    if ppo:
+        tf_policy_network = make_policy_network(
+            param_size=act_size * 2,
+            mean_std=mean_std,
+            hidden_layer_sizes=algo_params.network_factory.policy_hidden_layer_sizes,
+            activation=tf.nn.swish,
+        )
+    else:
+        # TODO sac uses relu ? shoud use swish no ?
+        tf_policy_network = make_policy_network(
+            param_size=act_size * 2,
+            mean_std=mean_std,
+            hidden_layer_sizes=(256, 256),  # TODO get this from config somehow
+            activation=tf.nn.relu,  # TODO get this from config somehow
+        )
 
     example_input = tf.zeros((1, obs_size))
     example_output = tf_policy_network(example_input)
@@ -147,15 +170,14 @@ def export_onnx(
 
         print("Weights transferred successfully.")
 
-    transfer_weights(params[1].policy["params"], tf_policy_network)
+    # transfer_weights(params[1].policy["params"], tf_policy_network)
+    transfer_weights(policy_params, tf_policy_network)
 
     # Example inputs for the model
     test_input = [np.ones((1, obs_size), dtype=np.float32)]
 
     # Define the TensorFlow input signature
-    spec = [
-        tf.TensorSpec(shape=(1, obs_size), dtype=tf.float32, name="obs")
-    ]
+    spec = [tf.TensorSpec(shape=(1, obs_size), dtype=tf.float32, name="obs")]
 
     tensorflow_pred = tf_policy_network(test_input)[0]
     # Build the model by calling it with example data
