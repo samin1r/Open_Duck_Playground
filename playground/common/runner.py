@@ -60,7 +60,6 @@ class BaseRunner(ABC):
             self.algo_params.batch_size = 256
             self.algo_params.num_evals = 15
             self.algo_params.num_resets_per_eval = 1
-            self.algo_params.entropy_cost = 0.005
             self.algo_params.network_factory = config_dict.create(
                 q_network_layer_norm=True,
                 hidden_layer_sizes=(512, 256, 128),
