@@ -250,8 +250,14 @@ class MjInfer(MJInferBase):
                         right_foot_pos, right_foot_theta, right_foot_mat = (
                             self.get_projected_foot("right")
                         )
-                        print("left", left_foot_pos)
-                        print("right", right_foot_pos)
+                        # print("left", left_foot_pos)
+                        # print("right", right_foot_pos)
+                        dist = np.linalg.norm(
+                            left_foot_pos[:2] - right_foot_pos[:2]
+                        )
+                        if dist < 0.1:
+                            print("CONTACT")
+                        # print("dist", dist)
 
                         self.imitation_i += 1.0 * self.phase_frequency_factor
                         self.imitation_i = (
