@@ -80,16 +80,6 @@
         <framepos objtype="site" objname="left_foot" name="left_foot_pos"/>
         <framepos objtype="site" objname="right_foot" name="right_foot_pos"/>
     </sensor>
-    <contact>
-      <!-- <exclude geom1="left_foot_rectangle" geom2="left_foot_cleat_back_left"/>
-      <exclude geom1="left_foot_rectangle" geom2="left_foot_cleat_back_right"/>
-      <exclude geom1="left_foot_rectangle" geom2="left_foot_cleat_front_left"/>
-      <exclude geom1="left_foot_rectangle" geom2="left_foot_cleat_front_right"/> -->
-      <!-- <exclude body1="left_foot___list_t0v6opd9rekumc_default" body2="left_foot___list_t0v6opd9rekumc_default"/>
-      <exclude body1="right_foot_" body2="right_foot_"/> -->
-      <exclude body1="right_foot_" body2="left_foot___list_t0v6opd9rekumc_default"/>
-
-    </contact>
 
     <worldbody>
         <body name="torso_2023" pos="0 0 0.4">
