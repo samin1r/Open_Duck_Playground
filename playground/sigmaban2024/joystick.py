@@ -367,9 +367,11 @@ class Joystick(sigmaban_base.SigmabanEnv):
     def _get_projected_foot(self, data, foot="left"):
         if foot not in ["left", "right"]:
             raise ValueError("foot must be 'left' or 'right'")
-        body_id = mujoco.mj_name2id(
-            self.mjx_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
-        )
+        # body_id = mujoco.mj_name2id(
+        #     self.mjx_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
+        # )
+        body_id = self.mjx_model.body(name=f"{foot}_ps_2")
+
         pos = data.xpos[body_id]  # np.array([x, y, z])
 
         offset = [0.14 / 2, -0.08 / 2, 0.0]
