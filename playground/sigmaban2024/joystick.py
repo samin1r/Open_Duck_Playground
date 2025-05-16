@@ -364,7 +364,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         reward, done = jp.zeros(2)
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
-    def get_projected_foot(self, foot="left"):
+    def get_projected_foot(self, data, foot="left"):
         if foot not in ["left", "right"]:
             raise ValueError("foot must be 'left' or 'right'")
         body_id = mujoco.mj_name2id(
