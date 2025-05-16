@@ -21,6 +21,7 @@ import jax.numpy as jp
 from ml_collections import config_dict
 from mujoco import mjx
 from mujoco.mjx._src import math
+import mujoco
 import numpy as np
 
 from mujoco_playground._src import mjx_env
@@ -365,7 +366,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
     def get_projected_foot(self, foot="left"):
         if foot not in ["left", "right"]:
             raise ValueError("foot must be 'left' or 'right'")
-        body_id = mjx.mj_name2id(
+        body_id = mujoco.mj_name2id(
             self.model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
         )
         pos = self.data.xpos[body_id]  # np.array([x, y, z])
