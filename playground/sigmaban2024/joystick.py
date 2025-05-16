@@ -370,7 +370,8 @@ class Joystick(sigmaban_base.SigmabanEnv):
         #     self.mjx_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
         # )
         # body_id = self.mjx_model.body(name=f"{foot}_ps_2")
-        body_id = self.mjx_model.mj_name2id("body", f"{foot}_ps_2")
+        # body_id = self.mjx_model.mj_name2id("body", f"{foot}_ps_2")
+        body_id = self.get_body_id_from_name(f"{foot}_ps_2")
 
 
         pos = data.xpos[body_id]  # np.array([x, y, z])
