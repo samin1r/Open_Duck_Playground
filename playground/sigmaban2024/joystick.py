@@ -368,7 +368,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         if foot not in ["left", "right"]:
             raise ValueError("foot must be 'left' or 'right'")
         body_id = mujoco.mj_name2id(
-            self.mxj_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
+            self.mjx_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
         )
         pos = data.xpos[body_id]  # np.array([x, y, z])
 
