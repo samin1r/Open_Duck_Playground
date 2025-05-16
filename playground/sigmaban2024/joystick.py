@@ -376,7 +376,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         pos = data.xpos[body_id]  # np.array([x, y, z])
 
-        offset = [0.14 / 2, -0.08 / 2, 0.0]
+        offset = jp.array([0.14 / 2, -0.08 / 2, 0.0])
         mat = data.xmat[body_id].reshape(3, 3)  # rotation matrix
 
         # project pos on the ground
@@ -396,8 +396,8 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         # apply the offset to the position resulting from the rotation
         # the offset is in the local frame of the left foot
-        # offset_world = mat @ offset
-        offset_world = jp.matmul(mat, offset)
+        offset_world = mat @ offset
+        # offset_world = jp.matmul(mat, offset)
 
         pos += offset_world
 
