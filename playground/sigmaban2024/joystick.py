@@ -127,7 +127,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         self._post_init()
 
     def _post_init(self) -> None:
-
         self._init_q = jp.array(self._mj_model.keyframe("home").qpos)
         self._default_actuator = self._mj_model.keyframe(
             "home"
@@ -218,8 +217,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # )
 
     def get_contact(self, data: mjx.Data) -> jax.Array:
-
-
         # contact = jp.array(
         #     [
         #         geoms_colliding(data, geom_id, self._floor_geom_id)
@@ -352,7 +349,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
                     metrics[f"cost/{k}"] = jp.zeros(())
         metrics["swing_peak"] = jp.zeros(())
 
-
         # contact = jp.array(
         #     [
         #         geoms_colliding(data, geom_id, self._floor_geom_id)
@@ -366,8 +362,40 @@ class Joystick(sigmaban_base.SigmabanEnv):
         reward, done = jp.zeros(2)
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
-    def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
+    def get_projected_foot(self, foot="left"):
+        if foot not in ["left", "right"]:
+            raise ValueError("foot must be 'left' or 'right'")
+        body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
+        )
+        pos = self.data.xpos[body_id]  # np.array([x, y, z])
 
+        offset = [0.14 / 2, -0.08 / 2, 0.0]
+        mat = self.data.xmat[body_id].reshape(3, 3)  # rotation matrix
+
+        # project pos on the ground
+        pos[2] = 0.001
+
+        # cancel all rotation except z
+        theta = jp.arctan2(mat[1, 0], mat[0, 0])
+
+        # Build a pure yaw rotation matrix
+        mat = jp.array(
+            [
+                [jp.cos(theta), -jp.sin(theta), 0],
+                [jp.sin(theta), jp.cos(theta), 0],
+                [0, 0, 1],
+            ]
+        )
+
+        # apply the offset to the position resulting from the rotation
+        # the offset is in the local frame of the left foot
+        offset_world = mat @ offset
+        pos += offset_world
+
+        return pos, theta, mat
+
+    def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
         if USE_IMITATION_REWARD:
             state.info["imitation_i"] += 1
             state.info["imitation_i"] = (
@@ -481,6 +509,10 @@ class Joystick(sigmaban_base.SigmabanEnv):
         obs = self._get_obs(data, state.info, contact)
         done = self._get_termination(data)
 
+        projected_left_foot_pos, _, _ = self.get_projected_foot("left")
+
+        projected_right_foot_pos, _, _ = self.get_projected_foot("right")
+
         rewards = self._get_reward(
             data, action, state.info, state.metrics, done, first_contact, contact
         )
@@ -531,7 +563,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
     def _get_obs(
         self, data: mjx.Data, info: dict[str, Any], contact: jax.Array
     ) -> mjx_env.Observation:
-
         gyro = self.get_gyro(data)
         info["rng"], noise_rng = jax.random.split(info["rng"])
         noisy_gyro = (
