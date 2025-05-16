@@ -396,7 +396,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
 
         # apply the offset to the position resulting from the rotation
         # the offset is in the local frame of the left foot
-        offset_world = mat @ offset
+        # offset_world = mat @ offset
+        offset_world = jp.matmul(mat, offset)
+
         pos += offset_world
 
         return pos, theta, mat
