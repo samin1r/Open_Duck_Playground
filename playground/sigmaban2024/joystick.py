@@ -42,7 +42,10 @@ from playground.common.rewards import (
     # reward_imitation,
     # cost_head_pos,
 )
-from playground.sigmaban2024.custom_rewards import reward_imitation
+from playground.sigmaban2024.custom_rewards import (
+    reward_imitation,
+    cost_feet_rectangle_contact,
+)
 
 # if set to false, won't require the reference data to be present and won't compute the reference motions polynoms for nothing
 USE_IMITATION_REWARD = True
@@ -90,6 +93,7 @@ def default_config() -> config_dict.ConfigDict:
                 stand_still=0.0,  # was -0.3
                 alive=20.0,
                 imitation=1.0,
+                feet_rectangle_contact=-0.5,
                 # head_pos=-1.0,
             ),
             tracking_sigma=0.01,  # was working at 0.01
@@ -127,7 +131,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         self._post_init()
 
     def _post_init(self) -> None:
-
         self._init_q = jp.array(self._mj_model.keyframe("home").qpos)
         self._default_actuator = self._mj_model.keyframe(
             "home"
@@ -184,6 +187,13 @@ class Joystick(sigmaban_base.SigmabanEnv):
             [self._mj_model.geom(name).id for name in constants.RIGHT_FEET_GEOMS]
         )
 
+        self._feet_geom_rectangles_ids = np.array(
+            [
+                self._mj_model.geom(name).id
+                for name in ["left_foot_rectangle", "right_foot_rectangle"]
+            ]
+        )
+
         foot_linvel_sensor_adr = []
         for site in constants.FEET_SITES:
             sensor_id = self._mj_model.sensor(f"{site}_global_linvel").id
@@ -218,8 +228,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # )
 
     def get_contact(self, data: mjx.Data) -> jax.Array:
-
-
         # contact = jp.array(
         #     [
         #         geoms_colliding(data, geom_id, self._floor_geom_id)
@@ -352,7 +360,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
                     metrics[f"cost/{k}"] = jp.zeros(())
         metrics["swing_peak"] = jp.zeros(())
 
-
         # contact = jp.array(
         #     [
         #         geoms_colliding(data, geom_id, self._floor_geom_id)
@@ -367,7 +374,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
         return mjx_env.State(data, obs, reward, done, metrics, info)
 
     def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
-
         if USE_IMITATION_REWARD:
             state.info["imitation_i"] += 1
             state.info["imitation_i"] = (
@@ -478,11 +484,26 @@ class Joystick(sigmaban_base.SigmabanEnv):
         p_fz = p_f[..., -1]
         state.info["swing_peak"] = jp.maximum(state.info["swing_peak"], p_fz)
 
+        feet_rectangle_contact = jp.array(
+            geoms_colliding(
+                data,
+                self._feet_geom_rectangles_ids[0],
+                self._feet_geom_rectangles_ids[1],
+            )
+        )
+
         obs = self._get_obs(data, state.info, contact)
         done = self._get_termination(data)
 
         rewards = self._get_reward(
-            data, action, state.info, state.metrics, done, first_contact, contact
+            data,
+            action,
+            state.info,
+            state.metrics,
+            done,
+            first_contact,
+            contact,
+            feet_rectangle_contact,
         )
         # FIXME
         rewards = {
@@ -531,7 +552,6 @@ class Joystick(sigmaban_base.SigmabanEnv):
     def _get_obs(
         self, data: mjx.Data, info: dict[str, Any], contact: jax.Array
     ) -> mjx_env.Observation:
-
         gyro = self.get_gyro(data)
         info["rng"], noise_rng = jax.random.split(info["rng"])
         noisy_gyro = (
@@ -665,6 +685,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         done: jax.Array,
         first_contact: jax.Array,
         contact: jax.Array,
+        feet_rectangle_contact: jax.Array,
     ) -> dict[str, jax.Array]:
         del metrics  # Unused.
 
@@ -701,6 +722,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
                 self._default_actuator,
                 ignore_head=False,
             ),
+            "feet_rectangle_contact": cost_feet_rectangle_contact(
+                feet_rectangle_contact
+            )
             # "head_pos": cost_head_pos(
             #     self.get_actuator_joints_qpos(data.qpos),
             #     self.get_actuator_joints_qvel(data.qvel),

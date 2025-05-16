@@ -168,3 +168,7 @@ def reward_imitation(
 
     reward *= cmd_norm > 0.01  # No reward for zero commands.
     return jp.nan_to_num(reward)
+
+
+def cost_feet_rectangle_contact(feet_rectangle_contact:jax.Array):
+    return jp.nan_to_num(-jp.sum(feet_rectangle_contact))
