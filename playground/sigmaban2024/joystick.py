@@ -380,7 +380,7 @@ class Joystick(sigmaban_base.SigmabanEnv):
         mat = data.xmat[body_id].reshape(3, 3)  # rotation matrix
 
         # project pos on the ground
-        pos[2] = 0.001
+        pos.at[2].set(0.001)
 
         # cancel all rotation except z
         theta = jp.arctan2(mat[1, 0], mat[0, 0])
