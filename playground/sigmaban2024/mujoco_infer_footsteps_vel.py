@@ -257,7 +257,7 @@ class MjInfer(MJInferBase):
                         )
                         if dist < 0.1:
                             print("CONTACT")
-                        # print("dist", dist)
+                        print("dist", dist)
 
                         self.imitation_i += 1.0 * self.phase_frequency_factor
                         self.imitation_i = (

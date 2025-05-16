@@ -39,7 +39,6 @@ def reward_imitation(
     # w_joint_vel = 1.0e-3
     # w_contact = 5.0
 
-
     # dimensions_names = [
     #     0  "pos head_yaw",
     #     1  "pos head_pitch",
@@ -168,3 +167,7 @@ def reward_imitation(
 
     reward *= cmd_norm > 0.01  # No reward for zero commands.
     return jp.nan_to_num(reward)
+
+
+def cost_feet_dist(feet_dist):
+    return jp.nan_to_num(feet_dist < 0.1)
