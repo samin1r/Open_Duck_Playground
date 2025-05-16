@@ -21,7 +21,6 @@ import jax.numpy as jp
 from ml_collections import config_dict
 from mujoco import mjx
 from mujoco.mjx._src import math
-import mujoco
 import numpy as np
 
 from mujoco_playground._src import mjx_env
@@ -370,7 +369,9 @@ class Joystick(sigmaban_base.SigmabanEnv):
         # body_id = mujoco.mj_name2id(
         #     self.mjx_model, mujoco.mjtObj.mjOBJ_BODY, f"{foot}_ps_2"
         # )
-        body_id = self.mjx_model.body(name=f"{foot}_ps_2")
+        # body_id = self.mjx_model.body(name=f"{foot}_ps_2")
+        body_id = self.mjx_model.name2id("body", f"{foot}_ps_2")
+
 
         pos = data.xpos[body_id]  # np.array([x, y, z])
 
