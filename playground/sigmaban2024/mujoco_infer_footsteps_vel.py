@@ -247,6 +247,11 @@ class MjInfer(MJInferBase):
                         left_foot_pos, left_foot_theta, left_foot_mat = (
                             self.get_projected_foot("left")
                         )
+                        right_foot_pos, right_foot_theta, right_foot_mat = (
+                            self.get_projected_foot("right")
+                        )
+                        print("left", left_foot_pos)
+                        print("right", right_foot_pos)
 
                         self.imitation_i += 1.0 * self.phase_frequency_factor
                         self.imitation_i = (
