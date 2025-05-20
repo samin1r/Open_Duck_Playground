@@ -1,14 +1,40 @@
-
 import tensorflow as tf
 from tensorflow.keras import layers
 import tf2onnx
 import numpy as np
+import os
 
 def export_onnx(
-    params, act_size, ppo_params, obs_size, output_path="ONNX.onnx"
+    params, act_size, ppo_params, obs_size, output_path="ONNX.onnx", use_cpu=False
 ):
     print(" === EXPORT ONNX === ")
 
+    # If use_cpu is True, force TensorFlow to use CPU
+    original_cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", None)
+    
+    if use_cpu:
+        print("Forcing CPU usage for ONNX export")
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Hide GPU from TensorFlow
+        
+        # Verify we're using CPU
+        physical_devices = tf.config.list_physical_devices()
+        print(f"Available devices: {[device.name for device in physical_devices]}")
+        
+        # Explicitly place operations on CPU
+        with tf.device('/CPU:0'):
+            return _export_onnx_internal(params, act_size, ppo_params, obs_size, output_path)
+    else:
+        return _export_onnx_internal(params, act_size, ppo_params, obs_size, output_path)
+    
+    # Restore original environment variable if it existed
+    if original_cuda_visible_devices is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = original_cuda_visible_devices
+    elif "CUDA_VISIBLE_DEVICES" in os.environ:
+        del os.environ["CUDA_VISIBLE_DEVICES"]
+
+def _export_onnx_internal(
+    params, act_size, ppo_params, obs_size, output_path="ONNX.onnx"
+):
     # inference_fn = make_inference_fn(params, deterministic=True)
 
     class MLP(tf.keras.Model):
@@ -147,7 +173,17 @@ def export_onnx(
 
         print("Weights transferred successfully.")
 
-    transfer_weights(params[1].policy["params"], tf_policy_network)
+    if hasattr(params[1], 'policy') and "params" in params[1].policy:
+        # Original structure
+        transfer_weights(params[1].policy["params"], tf_policy_network)
+    elif isinstance(params[1], dict) and "params" in params[1]:
+        # Alternative structure
+        transfer_weights(params[1]["params"], tf_policy_network)
+    else:
+        # Debug information
+        print("Params structure:", type(params[1]))
+        print("Params keys:", params[1].keys() if hasattr(params[1], 'keys') else "No keys method")
+        raise ValueError("Unexpected parameter structure. Cannot export to ONNX.")
 
     # Example inputs for the model
     test_input = [np.ones((1, obs_size), dtype=np.float32)]
