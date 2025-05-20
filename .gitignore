@@ -8,5 +8,5 @@ mujoco_saved_obs.pkl
 checkpoints/
 .tmp/
 *.onnx
-*.TXT
+
 viz_env/
